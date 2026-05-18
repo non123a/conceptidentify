@@ -4,6 +4,7 @@ import re
 import time
 from google import genai
 from dotenv import load_dotenv
+from materials.services.retrieval_service import search_chunks
 
 load_dotenv()
 
@@ -12,16 +13,70 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 def generate_questions(topic_name, material_text, num_questions=3, question_type="mcq", custom_prompt=""):
 
     print("\n================ GENERATE AI START ================")
+    retrieved_chunks = search_chunks(topic_name)
 
+    retrieved_text = "\n\n".join([
+        chunk.chunk_text
+        for chunk in retrieved_chunks
+    ])
+    print("\n📚 RETRIEVED CHUNKS:\n")
+    print(retrieved_text)
+
+    context_text = (
+        retrieved_text
+        if retrieved_text.strip()
+        else material_text
+    )
+    if question_type == "mcq":
+
+        question_rules = """
+        - Generate multiple choice questions
+        - Include 4 plausible choices
+        - Only 1 correct answer
+        - Distractors must be believable
+        - Focus on conceptual understanding
+        """
+
+    elif question_type == "open":
+
+        question_rules = """
+        - Generate open-ended questions
+        - Questions should encourage explanation and reasoning
+        - Avoid yes/no questions
+        - Include a strong reference answer
+        - Focus on understanding and application
+        """
+    if question_type == "mcq":
+
+        json_format = f"""
+    [
+    {{
+        "question": "...",
+        "type": "{question_type}",
+        "choices": ["A", "B", "C", "D"],
+        "correct_answer": "..."
+    }}
+    ]
+    """
+
+    elif question_type == "open":
+
+        json_format = f"""
+    [
+    {{
+        "question": "...",
+        "type": "{question_type}",
+        "reference_answer": "..."
+    }}
+    ]
+    """
     prompt = f"""
 You are an educational assistant.
 
 Generate {num_questions} {question_type.upper()} questions.
 
-STRICT RULES:
-- Use ONLY the material provided
-- No outside knowledge
-- Clear and simple
+Question Rules:
+{question_rules}
 
 Custom Instruction:
 {custom_prompt}
@@ -33,27 +88,19 @@ IF MCQ:
 IF OPEN:
 - include reference_answer
 
-Return ONLY JSON:
+Return ONLY valid JSON:
 
-[
-  {{
-    "question": "...",
-    "type": "{question_type}",
-    "choices": ["A","B","C","D"],
-    "correct_answer": "..."
-  }}
-]
-
+{json_format}
 Topic:
 {topic_name}
 
-Material:
-{material_text}
+Retrieved Learning Material:
+{context_text}
 """
 
     model_candidates = [
-        "gemini-2.5-flash-lite",
         "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
         "gemini-flash-latest"
     ]
 
@@ -76,9 +123,11 @@ Material:
                     contents=prompt
                 )
 
-                if time.time() - start_time > 10:
-                    print("⏱ TIMEOUT")
-                    return []
+                # if time.time() - start_time > 10:
+                #     print("⏱ TIMEOUT")
+                #     return []
+                if time.time() - start_time > 20:
+                    raise TimeoutError("Gemini request timeout")
 
                 print(f"✅ SUCCESS with {model_name}")
                 break

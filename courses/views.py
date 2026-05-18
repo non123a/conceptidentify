@@ -364,15 +364,28 @@ def bulk_create_questions(request, course_id, topic_id):
                 is_approved=True,
                 created_by="lecturer"
             )
-            for choice_text in q["choices"]:
-                cleaned = clean_choice(choice_text)
-                if q["type"] == "mcq":
-                    for choice_text in q["choices"]:
-                        Choice.objects.create(
-                            question=question_obj,
-                            text=choice_text,
-                            is_correct=(choice_text == q["correct_answer"])
+            # for choice_text in q["choices"]:
+            #     cleaned = clean_choice(choice_text)
+            #     if q["type"] == "mcq":
+            #         for choice_text in q["choices"]:
+            #             Choice.objects.create(
+            #                 question=question_obj,
+            #                 text=choice_text,
+            #                 is_correct=(choice_text == q["correct_answer"])
+            #             )
+            if q["type"] == "mcq":
+
+                for choice_text in q["choices"]:
+
+                    cleaned = clean_choice(choice_text)
+
+                    Choice.objects.create(
+                        question=question_obj,
+                        text=cleaned,
+                        is_correct=(
+                            cleaned == clean_choice(q["correct_answer"])
                         )
+                    )
 
         return JsonResponse({"status": "ok"})
 
@@ -382,7 +395,11 @@ def generate_topic_questions(request, course_id, topic_id):
     topic = get_object_or_404(Topic, id=topic_id)
 
     materials = Material.objects.filter(topic=topic)
-    material_text = " ".join([m.content for m in materials])
+    # material_text = " ".join([m.content for m in materials])
+    material_text = " ".join([
+        m.extracted_text or ""
+        for m in materials
+    ])
 
     # 🔥 HERE
     question_type = request.GET.get("type", "mcq")
