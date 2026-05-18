@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h3>Edit Question</h3>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- QUESTION TEXT -->
+        <div class="mb-3">
+            <label>Question</label>
+            <textarea name="text" class="form-control" required>{{ question.text }}</textarea>
+        </div>
+
+        <!-- TYPE -->
+        <div class="mb-3">
+            <label>Type</label>
+            <input type="text" class="form-control" value="{{ question.get_question_type_display }}" disabled>
+        </div>
+
+        <!-- MCQ -->
+        {% if question.question_type == "mcq" %}
+            <div class="mb-3">
+                <label>Options</label>
+
+                {% for choice in question.choices.all %}
+                    <div class="input-group mb-2">
+                        <input type="text" name="options[]" class="form-control" value="{{ choice.text }}">
+
+                        <div class="input-group-text">
+                            <input type="radio" name="correct_option" value="{{ forloop.counter0 }}"
+                            {% if choice.is_correct %}checked{% endif %}>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- OPEN -->
+        {% if question.question_type == "open" %}
+            <div class="mb-3">
+                <label>Reference Answer</label>
+                <textarea name="correct_answer" class="form-control">{{ question.correct_answer }}</textarea>
+            </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-success">Update</button>
+        <a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
+
+    </form>
+</div>
+
+{% endblock %}

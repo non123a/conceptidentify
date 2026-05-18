@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4 text-center">{{ course.name }} - Dashboard</h2>
+<h3>Topic Performance</h3>
+
+<table class="table mt-3">
+    <thead>
+        <tr>
+            <th>Topic</th>
+            <th>Performance</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if data %}
+            {% for t in data %}
+            <tr>
+                <td>{{ t.topic}}</td>
+                <td>{{ t.performance|floatformat:2 }}%</td>
+                <td>
+                    <!-- {% if t.performance < 40 %}
+                        <span class="text-danger">❌ Weak</span>
+                    {% elif t.performance < 70 %}
+                        <span class="text-warning">⚠️ Needs Improvement</span>
+                    {% else %}
+                        <span class="text-success">✔ Strong</span>
+                    {% endif %} -->
+                    {% if not t.has_data %}
+                        <span class="text-muted">⚠️ No Data</span>
+                    {% elif t.performance < 40 %}
+                        <span class="text-danger">❌ Weak</span>
+                    {% elif t.performance < 70 %}
+                        <span class="text-warning">⚠️ Needs Improvement</span>
+                    {% else %}
+                        <span class="text-success">✔ Strong</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="3" class="text-center text-muted">
+                    No performance data yet.
+                </td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>
+
+    
+    <div class="row mb-4">
+
+    <div class="col-md-4">
+        <div class="card text-center shadow p-3">
+            <h5>Average Performance</h5>
+            <h3 class="text-primary">{{ avg_performance|floatformat:2 }}%</h3>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-center shadow p-3">
+            <h5>Completion Rate</h5>
+            <h3 class="text-success">{{ avg_completion|floatformat:2 }}%</h3>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-center shadow p-3">
+            <h5>Weak Topics</h5>
+            <h3 class="text-danger">{{ weak_topics }}</h3>
+        </div>
+    </div>
+    
+    </div>
+        <div class="card shadow p-4">
+            
+            <canvas id="myChart"></canvas>
+        </div>
+
+    </div>
+
+{{ data|json_script:"chart-data" }}
+
+<script>
+    const rawData = JSON.parse(
+        document.getElementById('chart-data').textContent
+    );
+    
+
+    const labels = rawData.map(item => item.topic);
+    
+    const performance = rawData.map(item => item.performance);
+    const completion = rawData.map(item => item.completion);
+
+    // const colors = rawData.map(item =>
+    //     item.is_weak ? 'rgba(255, 99, 132, 0.6)' : 'rgba(54, 162, 235, 0.6)'
+    // );
+    const colors = rawData.map(item => {
+    if (item.performance < 40) return 'rgba(255, 99, 132, 0.6)';
+    if (item.performance < 70) return 'rgba(255, 206, 86, 0.6)';
+    return 'rgba(54, 162, 235, 0.6)';
+    });
+    if (rawData.length > 0) {
+        const ctx = document.getElementById('myChart');
+
+        new Chart(ctx, {
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Performance (%)',
+                        data: performance,
+                        backgroundColor: colors
+                    },
+                    {
+                        type: 'line',
+                        label: 'Completion (%)',
+                        data: completion,
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 4,
+                        pointRadius: 6,
+                        fill: false,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+{% endblock %}

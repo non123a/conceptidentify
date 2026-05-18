@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="card p-4 shadow text-center">
+
+        <h3>{{ topic.name }}</h3>
+        {% if is_retry %}
+            <div class="alert alert-warning">
+                ⚠️ This is a practice attempt. Only your first attempt is used for analysis.
+            </div>
+        {% endif %}
+        {% if not is_retry %}
+            <p><strong>Performance:</strong> {{ performance|floatformat:2 }}%</p>
+            <p><strong>Completion:</strong> {{ completion|floatformat:2 }}%</p>
+            {% if performance < 40 %}
+                <span class="badge bg-danger">❌ Weak Topic</span>
+            {% elif performance < 70 %}
+                <span class="badge bg-warning">⚠️ Needs Improvement</span>
+            {% else %}
+                <span class="badge bg-success">✔ Strong Topic</span>
+            {% endif %}
+
+        {% endif %}
+  
+
+        <div class="mt-4">
+            <a href="{% url 'student_dashboard' course.id %}" class="btn btn-primary">
+                View Overall Performance
+            </a>
+        </div>
+
+        <div class="mt-2">
+            <a href="{% url 'course_detail' course.id %}" class="btn btn-secondary">
+                Back to Course
+            </a>
+        </div>
+
+    </div>
+{% if temp_results %}
+    <h5 class="mt-4">Your Answers:</h5>
+
+    
+    {% for r in temp_results %}
+    <div class="card p-2 mb-2">
+        <strong>{{ r.question }}</strong><br>
+        <p>Your answer: {{ r.answer }}</p>
+
+        {% if r.type == "mcq" %}
+            {% if r.score == 1 %}
+                <span class="text-success">✔ Correct</span>
+            {% else %}
+                <span class="text-danger">✘ Wrong</span>
+            {% endif %}
+
+        {% else %}
+            {% if r.feedback == "Evaluating..." %}
+                <span class="text-secondary">⏳ Evaluating...</span>
+            {% else %}
+                {% if r.score >= 80 %}
+                    <span class="text-success">✔ Correct ({{ r.score }}%)</span>
+                {% elif r.score >= 40 %}
+                    <span class="text-warning">⚠️ Partial ({{ r.score }}%)</span>
+                {% else %}
+                    <span class="text-danger">✘ Incorrect ({{ r.score }}%)</span>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+
+        {% if r.type == "open" and not r.ai_pending %}
+            <p><strong>Feedback:</strong> {{ r.feedback }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% endif %}
+</div>
+
+{% endblock %}

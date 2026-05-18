@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>Create Question for {{ topic.name }}</h3>
+
+<div class="row">
+
+    <!-- LEFT: MATERIAL -->
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5>📘 Material</h5>
+            <div style="max-height: 400px; overflow-y: auto;">
+                {% for m in topic.materials.all %}
+                    <p>{{ m.content }}</p>
+                {% empty %}
+                    <p class="text-muted">No material yet</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER: AI GENERATOR -->
+    <div class="col-md-5">
+        <div class="card p-3">
+            <h5>🤖 Generate Questions</h5>
+
+            <textarea id="prompt" class="form-control mb-2"
+                placeholder="e.g. generate conceptual MCQ about requirements gathering"></textarea>
+
+            <div class="mb-2">
+                <label>Type:</label>
+                <select id="ai_type" class="form-control">
+                    <option value="mcq">MCQ</option>
+                    <option value="open">Open</option>
+                </select>
+            </div>
+
+            <div class="mb-2">
+                <label>Number:</label>
+                <input type="number" id="ai_count" value="3" class="form-control">
+            </div>
+
+            <button class="btn btn-primary" onclick="generateAI()">
+                Generate
+            </button>
+        </div>
+
+        <!-- MANUAL FORM -->
+        <form method="post" class="mt-4">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label>Question Text</label>
+                <textarea name="text" id="question_text" class="form-control"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label>Question Type</label>
+                <!-- <select name="question_type" id="question_type" class="form-control"> -->
+                    <select name="question_type" id="question_type" class="form-control" onchange="toggleQuestionType()">
+                        <option value="mcq">MCQ</option>
+                        <option value="open">Open</option>
+                    </select>
+            </div>
+
+            <div class="mb-3" id="reference-answer-box" style="display:none;">
+                <label>Reference Answer</label>
+                <textarea name="correct_answer" id="reference_answer" class="form-control"></textarea>
+            </div>
+
+            <div id="mcq-options">
+                <div class="mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addOption()">
+                        + Add Option
+                    </button>
+
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOption()">
+                        - Remove Option
+                    </button>
+                </div>
+                <label>Options</label>
+
+                <div id="options-container"></div>
+
+                <div class="mt-3">
+                    <label>Correct Option</label>
+                    <select name="correct_option" id="correct_option" class="form-control"></select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success mt-3">Create Question</button>
+        </form>
+    </div>
+
+    <!-- RIGHT: GENERATED -->
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h5>📝 Generated Questions</h5>
+            <div id="question-list"></div>
+            <button class="btn btn-success mt-3 w-100" onclick="approveSelected()">
+                ✅ Approve Selected
+            </button>
+        </div>
+    </div>
+
+</div>
+<div id="toast" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #198754;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    display: none;
+    z-index: 9999;
+">
+</div>
+<script>
+
+let optionsContainer;
+let correctSelect;
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    optionsContainer = document.getElementById("options-container");
+    correctSelect = document.getElementById("correct_option");
+    toggleQuestionType();
+
+});
+function addOption() {
+    const count = optionsContainer.children.length;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.name = "options[]";
+    input.className = "form-control mb-2";
+    input.placeholder = "Option " + (count + 1);
+
+    optionsContainer.appendChild(input);
+
+    updateCorrectOptions();
+}
+
+function removeOption() {
+    if (optionsContainer.children.length > 2) {
+        optionsContainer.removeChild(optionsContainer.lastChild);
+        updateCorrectOptions();
+    }
+}
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.innerText = message;
+    toast.style.display = "block";
+
+    setTimeout(() => {
+        toast.style.display = "none";
+    }, 2000);
+}
+function updateCorrectOptions() {
+    correctSelect.innerHTML = "";
+
+    const count = optionsContainer.children.length;
+
+    for (let i = 0; i < count; i++) {
+        const option = document.createElement("option");
+        option.value = i;
+        option.text = "Option " + (i + 1);
+        correctSelect.appendChild(option);
+    }
+}
+function generateAI() {
+    const type = document.getElementById("ai_type").value;
+    const count = document.getElementById("ai_count").value;
+    const prompt = document.getElementById("prompt").value;
+
+    fetch(`{% url 'generate_questions' course.id topic.id %}?type=${type}&count=${count}&prompt=${prompt}`)
+        .then(res => res.json())
+        .then(data => {
+
+            const container = document.getElementById("question-list");
+            container.innerHTML = "";
+
+            data.questions.forEach((q) => {
+
+                const div = document.createElement("div");
+                div.className = "card p-2 mb-2";
+
+                div.innerHTML = `
+                    <input type="checkbox" class="select-question" data-question='${JSON.stringify(q)}'>
+
+                    <textarea class="form-control mb-2">${q.question}</textarea>
+
+                    ${q.type === "mcq" 
+                        ? q.choices.map(c => `<div>- ${c}</div>`).join("")
+                        : `<small class="text-muted">Ref: ${q.correct_answer}</small>`
+                    }
+
+                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">Delete</button>
+                `;
+
+                container.appendChild(div);
+            });
+        });
+}
+function useQuestion(q) {
+
+    // fill basic fields
+    document.getElementById("question_text").value = q.question;
+    document.getElementById("question_type").value = q.type;
+
+    // 🔥 ALWAYS call toggle (single source of truth)
+    toggleQuestionType();
+
+    // ===== MCQ =====
+    if (q.type === "mcq") {
+
+        optionsContainer.innerHTML = "";
+
+        q.choices.forEach((choice, index) => {
+            const input = document.createElement("input");
+            input.type = "text";
+            input.name = "options[]";
+            input.className = "form-control mb-2";
+            input.value = choice;
+
+            optionsContainer.appendChild(input);
+        });
+
+        // rebuild correct option dropdown
+        correctSelect.innerHTML = "";
+
+        q.choices.forEach((_, i) => {
+            const opt = document.createElement("option");
+            opt.value = i;
+            opt.text = "Option " + (i + 1);
+            correctSelect.appendChild(opt);
+        });
+
+        const correctIndex = q.choices.indexOf(q.correct_answer);
+        if (correctIndex !== -1) {
+            correctSelect.value = correctIndex;
+        }
+
+    }
+
+    // ===== OPEN =====
+    if (q.type === "open") {
+        document.getElementById("reference_answer").value = q.correct_answer || "";
+
+        // 🔥 CLEAR MCQ DATA
+        optionsContainer.innerHTML = "";
+        correctSelect.innerHTML = "";
+    }
+}
+
+function toggleQuestionType() {
+    const type = document.getElementById("question_type").value;
+    const mcqSection = document.getElementById("mcq-options");
+    const referenceBox = document.getElementById("reference-answer-box");
+
+    if (type === "mcq") {
+        mcqSection.style.display = "block";
+        referenceBox.style.display = "none";
+
+        // ensure at least 2 options exist
+        if (optionsContainer.children.length === 0) {
+            addOption();
+            addOption();
+        }
+
+    } else {
+        mcqSection.style.display = "none";
+        referenceBox.style.display = "block";
+
+        // clear MCQ data
+        optionsContainer.innerHTML = "";
+        correctSelect.innerHTML = "";
+    }
+}
+
+function approveSelected() {
+
+    const selected = document.querySelectorAll(".select-question:checked");
+
+    if (selected.length === 0) {
+        alert("Select at least one question");
+        return;
+    }
+
+    const questions = [];
+
+    selected.forEach(el => {
+        const q = JSON.parse(el.dataset.question);
+
+        const parent = el.closest(".card");
+
+        const editedText = parent.querySelector("textarea").value;
+        q.question = editedText;
+
+        questions.push(q);
+    });
+
+    fetch("{% url 'bulk_create_questions' course.id topic.id %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ questions: questions })
+    })
+    .then(res => res.json())
+    .then(data => {
+        // alert("Saved successfully!");
+        // location.reload();
+        showToast("Questions approved successfully");
+        setTimeout(() => location.reload(), 800);
+    });
+}
+</script>
+
+{% endblock %}

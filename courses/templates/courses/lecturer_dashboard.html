@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- <h1>{{ course.name }} - Lecturer Dashboard</h1> -->
+<h1>{{ course.name }} - Class Learning Analysis</h1>
+<p class="text-muted">
+    This dashboard shows overall topic performance and students who may need additional support.
+</p>
+<div class="mb-3">
+    <strong>How to read this chart:</strong>
+    <ul>
+        <li><b>Blue bars</b> = average student performance per topic</li>
+        <li><b>Orange line</b> = completion rate (how many students attempted)</li>
+        <li>Topics with low performance may need review</li>
+    </ul>
+</div>
+
+<div class="card p-3 mb-4">
+    <h5>⚠️ Topics Requiring Attention</h5>
+
+            {% if data %}
+                {% if weak_topics %}
+            {% for t in weak_topics %}
+                <p class="text-danger">
+                    {{ t.topic }}
+                    ({{ t.students_answered }}/{{ t.total_students }} students)
+                    <br>
+
+                    <small>
+                        {{ t.error_rate|floatformat:2 }}% of responses are incorrect
+                    </small>
+                    <br>
+
+                    {% if t.weak_questions %}
+                        {% for q in t.weak_questions %}
+                            <small class="text-muted">
+                                • {{ q.text }} ({{ q.accuracy }}%)
+                            </small><br>
+                        {% endfor %}
+                    {% else %}
+                        <small class="text-muted">
+                            No specific weak question identified
+                        </small>
+                    {% endif %}
+                </p>
+            {% endfor %}
+        {% else %}
+            <p class="text-success">
+                All topics are performing well.
+            </p>
+        {% endif %}
+    {% else %}
+        <p class="text-muted">
+            No performance data available yet.
+        </p>
+        
+    {% endif %}
+</div>
+<div class="card mt-4 p-3">
+    <h5>📊 Topic Participation</h5>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Topic</th>
+                <th>Students Answered</th>
+                <th>Total Students</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in data %}
+            <tr>
+                <!-- <td>{{ t.topic }}</td> -->
+                 <td>
+                    <a href="{% url 'topic_performance' course.id t.topic_id %}">
+                        {{ t.topic }}
+                    </a>
+                </td>
+                <td>{{ t.students_answered }}</td>
+                <td>{{ t.total_students }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="row mb-4">
+
+    <div class="col-md-4">
+        <div class="card text-center p-3 shadow">
+            <h6>Weak Topics</h6>
+            <h3 class="text-danger">{{ weak_topics|length }}</h3>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-center p-3 shadow">
+            <h6>Students Needing Help</h6>
+            <h3 class="text-warning">{{ weak_students|length }}</h3>
+        </div>
+    </div>
+
+</div>
+
+{% if data %}
+    <canvas id="myChart"></canvas>
+{% else %}
+    <p class="text-muted">
+        No data available. Students have not attempted any questions yet.
+    </p>
+{% endif %}
+
+
+{{ data|json_script:"chart-data" }}
+
+<div class="card mt-4 p-3">
+    <h5>👥 Students Needing Help</h5>
+
+    {% for s in weak_students %}
+        {% if s.performance < 30 %}
+            <p class="text-danger">
+                🔴 <strong>{{ s.student }}</strong> is struggling with 
+                <strong>{{ s.topic }}</strong> ({{ s.performance }}%)
+            </p>
+        {% else %}
+            <p class="text-warning">
+                🟡 <strong>{{ s.student }}</strong> needs improvement in 
+                <strong>{{ s.topic }}</strong> ({{ s.performance }}%)
+            </p>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<script>
+    const rawData = JSON.parse(
+        document.getElementById('chart-data').textContent
+    );
+
+    const labels = rawData.map(item => item.topic);
+    const performance = rawData.map(item => item.performance);
+    const completion = rawData.map(item => item.completion_rate);
+
+    const colors = rawData.map(item =>
+        item.is_weak ? 'rgba(255, 99, 132, 0.6)' : 'rgba(54, 162, 235, 0.6)'
+    );
+
+    const ctx = document.getElementById('myChart');
+
+    new Chart(ctx, {
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Class Performance (%)',
+                    data: performance,
+                    backgroundColor: colors
+                },
+                {
+                    type: 'line',
+                    label: 'Completion (%)',
+                    data: completion,
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderWidth: 4,
+                    pointRadius: 6,
+                    fill: false,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

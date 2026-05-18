@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <h2 class="mb-4">{{ course.name }}</h2>
+    {% if request.user.role == "lecturer" %}
+    <div class="alert alert-info">
+        <strong>Join Code:</strong> {{ course.join_code }}
+    </div>
+    {% endif %}
+    <!-- 🔥 STUDENT PERFORMANCE -->
+    {% if request.user.role == "student" and data %}
+        <div class="card p-3 mb-4 shadow">
+            <h4>My Performance</h4>
+
+            {% for item in data %}
+                <div>
+                    <strong>{{ item.topic }}</strong> —
+                    {{ item.performance }}%
+                    
+                    {% if not item.has_data %}
+                        <span class="badge bg-secondary">No Data</span>
+                    {% elif item.is_weak %}
+                        <span class="badge bg-danger">Weak</span>
+                    {% else %}
+                        <span class="badge bg-success">Strong</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+        {% if request.user.role == "lecturer" %}
+    <a href="{% url 'create_topic' course.id %}" class="btn btn-success mb-3">
+        + Create Topic
+    </a>
+    {% endif %}
+        {% if request.user.role == "lecturer" %}
+        <a href="{% url 'lecturer_dashboard' course.id %}" 
+        class="btn btn-primary mb-3 ms-2">
+            📊 View Class Analytics
+        </a>
+    {% endif %}
+    
+    <!-- 🔥 TOPICS -->
+    {% if topics %}
+        <div class="row">
+            {% for topic in topics %}
+                <div class="col-md-6 mb-3">
+                    <div class="card p-3 shadow">
+
+                        <h5>{{ topic.name }}</h5>
+                        {% if topic.questions.count == 0 %}
+                            <p class="text-muted">No questions yet</p>
+                        {% endif %}
+                        {% if request.user.role == "lecturer" %}
+                        <a href="{% url 'create_question' course.id topic.id %}"
+                        class="btn btn-outline-success mt-2">
+                            + Add Question
+                        </a>
+                        <a href="{% url 'topic_question_bank' course.id topic.id %}"
+                        class="btn btn-outline-primary mt-2 ms-2">
+                            View Questions
+                        </a>
+                        {% endif %}
+                        {% if request.user.role == "student" %}
+                            <a href="{% url 'topic_questions' course.id topic.id %}"
+                               class="btn btn-primary mt-2">
+                                Start Practice
+                            </a>
+                        {% else %}
+                            <a href="{% url 'topic_performance' course.id topic.id %}"
+                               class="btn btn-warning mt-2">
+                                View Topic Performance
+                            </a>
+                        {% endif %}
+
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center mt-5">
+            <h5>No assignments available yet</h5>
+        </div>
+    {% endif %}
+
+{% endblock %}

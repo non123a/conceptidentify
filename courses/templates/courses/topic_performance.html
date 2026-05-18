@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2 class="mb-4">Topic Performance</h2>
+
+    <div class="card p-4 shadow">
+
+        <h4>{{ topic.name }}</h4>
+
+        <p><strong>Completion Rate:</strong> {{ data.completion_rate }}%</p>
+        <p><strong>Performance:</strong> {{ data.performance }}%</p>
+        {% if not data.has_data %}
+            <span class="badge bg-secondary">No Data</span>
+        {% elif data.is_weak %}
+            <span class="badge bg-danger">Weak</span>
+        {% else %}
+            <span class="badge bg-success">Strong</span>
+        {% endif %}
+
+    </div>
+    <div class="card mt-4 p-3">
+        <h5>⚠️ Weak Questions</h5>
+
+        {% if data.weak_questions %}
+            {% for q in data.weak_questions %}
+                <p class="text-muted">
+                    • {{ q.text }} ({{ q.accuracy }}%)
+                </p>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">No major weak questions identified.</p>
+        {% endif %}
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'course_detail' course.id %}" class="btn btn-secondary">
+            ← Back to Course
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

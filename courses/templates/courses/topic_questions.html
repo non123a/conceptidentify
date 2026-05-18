@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3 class="mb-4">{{ topic.name }}</h3>
+    <p class="text-danger">
+    ⚠️ Only your first attempt will be used for evaluation.
+    </p>
+    <form method="post">
+        {% csrf_token %}
+
+        {% for q in questions %}
+
+            <div class="card p-3 mb-3 shadow">
+
+                <p class="text-muted">
+                    Type: {{ q.question_type }}
+                </p>
+
+                <p><strong>Q{{ forloop.counter }}:</strong> {{ q.text }}</p>
+
+                {% if q.question_type == "mcq" %}
+                    {% if q.question_type == "mcq" and q.choices.all %}
+                        <!-- show choices -->
+                    
+                    {% for choice in q.choices.all %}
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                type="radio"
+                                name="question_{{ q.id }}"
+                                value="{{ choice.id }}">
+                            <label class="form-check-label">
+                                {{ choice.text }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                    {% else %}
+                        <p class="text-danger">⚠️ No options available for this question</p>
+                    {% endif %}
+                {% else %}
+
+                    <input type="text"
+                        name="question_{{ q.id }}"
+                        class="form-control"
+                        placeholder="Your answer here">
+
+                    <p class="text-warning mt-2">
+                        ⚠️ This question is not automatically graded yet.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        {% endfor %}
+
+        {% if questions %}
+            <button type="submit" class="btn btn-success">Submit Answers</button>
+        {% else %}
+            <p class="text-muted">No questions available yet.</p>
+        {% endif %}
+    </form>
+
+</div>
+
+{% endblock %}
