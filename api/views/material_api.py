@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from materials.models import MaterialChunk
 from materials.services.chunk_service import chunk_text
 from materials.services.pdf_service import extract_pdf_text
+from materials.services.embedding_service import generate_embedding
 
 # from courses.models import Material
 from topics.models import Topic
@@ -57,10 +58,19 @@ def upload_material(request):
 
         for index, chunk in enumerate(chunks):
 
+            # MaterialChunk.objects.create(
+            #     material=material,
+            #     chunk_index=index,
+            #     chunk_text=chunk
+            # )
+
+            embedding = generate_embedding(chunk)
+
             MaterialChunk.objects.create(
                 material=material,
                 chunk_index=index,
-                chunk_text=chunk
+                chunk_text=chunk,
+                embedding=embedding
             )
 
     except Exception as e:

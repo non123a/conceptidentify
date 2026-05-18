@@ -1,6 +1,7 @@
 from django.db import models
 from topics.models import Topic
 from users.models import User
+from pgvector.django import VectorField
 
 class Material(models.Model):
     topic = models.ForeignKey(
@@ -40,10 +41,14 @@ class MaterialChunk(models.Model):
     chunk_index = models.IntegerField()
 
     chunk_text = models.TextField()
-
+    embedding = VectorField(
+        dimensions=384,
+        null=True,
+        blank=True
+    )
     created_at = models.DateTimeField(
         auto_now_add=True
     )
-
+    
     def __str__(self):
         return f"{self.material.title} - Chunk {self.chunk_index}"
