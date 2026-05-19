@@ -5,7 +5,7 @@ from google import genai
 from .prompts import EVALUATE_ANSWER_PROMPT
 import time
 from dotenv import load_dotenv
-
+from materials.services.retrieval_service import search_chunks
 load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
@@ -18,12 +18,39 @@ def evaluate_open_answer(question, student_answer, topic_name, reference_answer=
         # =========================
         # 🧠 PROMPT
         # =========================
+        search_query = f"""
+        Topic: {topic_name}
+
+        Question:
+        {question}
+
+        Expected Answer:
+        {reference_answer or ""}
+
+        Student Answer:
+        {student_answer}
+        """
+
+        retrieved_chunks = search_chunks(search_query)
+
+        retrieved_text = "\n\n".join([
+            chunk.chunk_text
+            for chunk in retrieved_chunks
+        ])
+
+        print("\n📚 RETRIEVED EVALUATION CHUNKS:\n")
+        print(retrieved_text)
+    
+
+        print("\n📚 RETRIEVED EVALUATION CHUNKS:\n")
+        print(retrieved_text)
         prompt = EVALUATE_ANSWER_PROMPT.format(
             topic=topic_name,
             question=question,
             answer=student_answer,
             reference=reference_answer or "Not provided",
-            material_text=material_text or "No lecture material provided"
+            # material_text=material_text or "No lecture material provided"
+            material_text=retrieved_text or material_text or "No lecture material provided"
         )
 
         print("📤 PROMPT:\n", prompt)
@@ -32,8 +59,8 @@ def evaluate_open_answer(question, student_answer, topic_name, reference_answer=
         # 🤖 API CALL (NEW SDK) WITH RETRY + MODEL FALLBACK
         # =========================
         model_candidates = [
-            "gemini-2.5-flash-lite",
             "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
             "gemini-flash-latest"
         ]
         max_retries = 3
@@ -51,8 +78,7 @@ def evaluate_open_answer(question, student_answer, topic_name, reference_answer=
                     )
                     # 🔥 timeout safeguard
                     if time.time() - start_time > 10:
-                        print("⏱ TIMEOUT")
-                        return None, "Evaluation timeout"
+                        raise TimeoutError("Gemini request timeout")
                     print(f"✅ Successfully called model: {model_name}")
                     break
                 except Exception as e:

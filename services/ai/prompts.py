@@ -37,4 +37,8 @@ IMPORTANT RULES:
 - If answer uses correct idea but different wording → still reward
 - If answer includes unrelated or wrong concepts → reduce score
 - Do NOT rely on general knowledge outside the material
+- Identify misconceptions when possible
+- Explain why an answer is incorrect
+- Compare student misunderstandings against lecture concepts
+- Reward conceptual understanding even if wording differs
 """

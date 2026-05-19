@@ -360,7 +360,11 @@ def bulk_create_questions(request, course_id, topic_id):
                 topic=topic,
                 text=q["question"],
                 question_type=q["type"],
-                correct_answer=q.get("correct_answer", ""),
+                
+                correct_answer=(
+                    q.get("correct_answer")
+                    or q.get("reference_answer", "")
+                ),
                 is_approved=True,
                 created_by="lecturer"
             )

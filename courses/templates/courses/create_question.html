@@ -186,18 +186,29 @@ function generateAI() {
 
                 const div = document.createElement("div");
                 div.className = "card p-2 mb-2";
-
+                div.style.cursor = "pointer";
+                div.onclick = () => useQuestion(q);
                 div.innerHTML = `
-                    <input type="checkbox" class="select-question" data-question='${JSON.stringify(q)}'>
-
+                    
+                    <input 
+                        type="checkbox" 
+                        class="select-question" 
+                        data-question='${JSON.stringify(q).replace(/'/g, "&apos;")}'
+                        
+                    >
                     <textarea class="form-control mb-2">${q.question}</textarea>
-
+                    
                     ${q.type === "mcq" 
                         ? q.choices.map(c => `<div>- ${c}</div>`).join("")
-                        : `<small class="text-muted">Ref: ${q.correct_answer}</small>`
+                        : `<small class="text-muted">Ref: ${q.reference_answer}</small>`
                     }
 
-                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">Delete</button>
+                    <button 
+                        class="btn btn-sm btn-danger" 
+                        onclick="event.stopPropagation(); this.parentElement.remove()"
+                    >
+                        Delete
+                    </button>
                 `;
 
                 container.appendChild(div);
@@ -247,7 +258,7 @@ function useQuestion(q) {
 
     // ===== OPEN =====
     if (q.type === "open") {
-        document.getElementById("reference_answer").value = q.correct_answer || "";
+        document.getElementById("reference_answer").value = q.reference_answer || "";
 
         // 🔥 CLEAR MCQ DATA
         optionsContainer.innerHTML = "";
@@ -310,12 +321,24 @@ function approveSelected() {
         },
         body: JSON.stringify({ questions: questions })
     })
-    .then(res => res.json())
+    // .then(res => res.json())
+    .then(async res => {
+
+        const data = await res.json();
+
+        console.log("SERVER RESPONSE:", data);
+
+        return data;
+    })
     .then(data => {
         // alert("Saved successfully!");
         // location.reload();
         showToast("Questions approved successfully");
         setTimeout(() => location.reload(), 800);
+    })
+    .catch(err => {
+        console.error("APPROVE ERROR:", err);
+        alert("Bulk approval failed");
     });
 }
 </script>
