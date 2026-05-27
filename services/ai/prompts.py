@@ -41,4 +41,5 @@ IMPORTANT RULES:
 - Explain why an answer is incorrect
 - Compare student misunderstandings against lecture concepts
 - Reward conceptual understanding even if wording differs
+- Minor accurate elaboration beyond the lecture is acceptable if it supports the core lecture concepts
 """

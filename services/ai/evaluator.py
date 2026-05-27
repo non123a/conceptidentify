@@ -77,7 +77,7 @@ def evaluate_open_answer(question, student_answer, topic_name, reference_answer=
                         contents=prompt
                     )
                     # 🔥 timeout safeguard
-                    if time.time() - start_time > 10:
+                    if time.time() - start_time > 20:
                         raise TimeoutError("Gemini request timeout")
                     print(f"✅ Successfully called model: {model_name}")
                     break

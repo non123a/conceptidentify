@@ -8,12 +8,6 @@ from rest_framework.response import Response
 def current_user(request):
     user = request.user
 
-    # return Response({
-    #     "id": user.id,
-    #     "username": user.username,
-    #     "email": user.email,
-    #     "role": user.role,
-    # })
     return Response({
         "id": user.id,
         "username": user.username,

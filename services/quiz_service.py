@@ -93,7 +93,7 @@ def handle_topic_submission(student, questions, post_data):
                     materials = Material.objects.filter(topic=q.topic)
 
                     material_text = "\n".join([
-                        f"{m.title}: {m.content}" for m in materials
+                        f"{m.title}: {m.extracted_text}" for m in materials
                     ])
                     if not material_text.strip():
                         material_text = "No lecture material provided"
