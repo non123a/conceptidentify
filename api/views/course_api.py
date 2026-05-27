@@ -1,36 +1,78 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+)
+
+from rest_framework.permissions import (
+    IsAuthenticated,
+)
+
 from rest_framework.response import Response
 
-from courses.models import Course, Enrollment
+from courses.models import (
+    Course,
+    Enrollment,
+)
+
+from courses.serializers import (
+    CourseSerializer,
+)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def my_courses(request):
+
     user = request.user
 
-    # Lecturer courses
-    if user.role == 'lecturer':
-        courses = Course.objects.filter(lecturer=user)
+    if user.role == "lecturer":
 
-    # Student enrolled courses
+        courses = Course.objects.filter(
+            lecturer=user
+        )
+
     else:
-        enrolled_course_ids = Enrollment.objects.filter(
+
+        enrollments = Enrollment.objects.filter(
             student=user
-        ).values_list('course_id', flat=True)
+        )
 
-        courses = Course.objects.filter(id__in=enrolled_course_ids)
+        courses = [
+            enrollment.course
+            for enrollment in enrollments
+        ]
 
-    data = []
+    serializer = CourseSerializer(
+        courses,
+        many=True
+    )
 
-    for course in courses:
-        data.append({
-            "id": course.id,
-            "name": course.name,
-            "description": course.description,
-            "join_code": course.join_code,
-            "created_at": course.created_at,
-        })
+    return Response({
+        "success": True,
+        "data": serializer.data,
+    })
 
-    return Response(data)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def course_detail(request, course_id):
+
+    try:
+
+        course = Course.objects.get(
+            id=course_id
+        )
+
+    except Course.DoesNotExist:
+
+        return Response({
+            "success": False,
+            "message": "Course not found",
+        }, status=404)
+
+    serializer = CourseSerializer(course)
+
+    return Response({
+        "success": True,
+        "data": serializer.data,
+    })
