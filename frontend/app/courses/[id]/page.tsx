@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 
 import { useParams } from "next/navigation";
-import Link from "next/link";
+
 import api from "@/lib/api";
 
+import Link from "next/link";
 type Course = {
   id: number;
   name: string;
@@ -26,13 +27,7 @@ type Topic = {
   material_count: number;
   question_count: number;
 };
-type Material = {
-  id: number;
-  title: string;
-  file: string;
-  uploaded_at: string;
-  uploaded_by_name: string;
-};
+
 
 
 export default function CourseDetailPage() {
@@ -43,8 +38,7 @@ export default function CourseDetailPage() {
     useState<Course | null>(null);
     const [topics, setTopics] =
   useState<Topic[]>([]);
-    const [materials, setMaterials] =
-    useState<Material[]>([]);
+
   const [loading, setLoading] =
     useState(true);
 
@@ -60,7 +54,6 @@ export default function CourseDetailPage() {
 
         const [
             courseResponse,
-            materialsResponse,
             topicsResponse,
         ] = await Promise.all([
 
@@ -68,9 +61,6 @@ export default function CourseDetailPage() {
             `/courses/${params.id}/`
             ),
 
-            api.get(
-            `/courses/${params.id}/materials/`
-            ),
 
             api.get(
             `/courses/${params.id}/topics/`
@@ -82,9 +72,6 @@ export default function CourseDetailPage() {
             courseResponse.data.data
         );
 
-        setMaterials(
-            materialsResponse.data.data
-        );
 
         setTopics(
             topicsResponse.data.data
@@ -176,11 +163,9 @@ export default function CourseDetailPage() {
 
       {topics.map((topic) => (
 
-        <Link
+        <div
           key={topic.id}
-          className="rounded-xl border p-6 shadow-sm transition hover:shadow-md"
-          href={`/courses/${params.id}/topics/${topic.id}`}
-        >
+          className="rounded-xl border p-6 shadow-sm transition hover:shadow-md">
 
           <h3 className="text-2xl font-semibold">
             {topic.name}
@@ -201,8 +186,38 @@ export default function CourseDetailPage() {
             </p>
 
           </div>
+            <div className="mt-6 grid gap-3">
 
-        </Link>
+                <Link
+                    href={`/courses/${params.id}/topics/${topic.id}/create`}
+                    className="rounded-lg border bg-black px-4 py-3 text-center text-sm font-medium text-white transition hover:opacity-90"
+                >
+
+                    Create Questions
+
+                </Link>
+
+                <Link
+                    href={`/courses/${params.id}/topics/${topic.id}/questions`}
+                    className="rounded-lg border px-4 py-3 text-center text-sm font-medium transition hover:bg-gray-50"
+                >
+
+                    Question Bank
+
+                </Link>
+
+                <Link
+                    href={`/courses/${params.id}/topics/${topic.id}/analytics`}
+                    className="rounded-lg border px-4 py-3 text-center text-sm font-medium transition hover:bg-gray-50"
+                >
+
+                    Analytics
+
+                </Link>
+
+                </div>
+
+        </div>
 
       ))}
 

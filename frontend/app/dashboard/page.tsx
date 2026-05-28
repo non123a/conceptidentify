@@ -2,6 +2,8 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+
 
 import api from "@/lib/api";
 type Course = {
@@ -105,7 +107,7 @@ export default function DashboardPage() {
 
             {courses.map((course) => (
 
-              <a
+              <Link
                 key={course.id}
                 href={`/courses/${course.id}`}
                 className="rounded-xl border p-6 shadow-sm transition hover:shadow-md"
@@ -123,7 +125,7 @@ export default function DashboardPage() {
                   Join Code: {course.join_code}
                 </p>
 
-              </a>
+              </Link>
 
             ))}
 

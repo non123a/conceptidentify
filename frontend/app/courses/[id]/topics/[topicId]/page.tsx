@@ -13,39 +13,13 @@ type Topic = {
   material_count: number;
   question_count: number;
 };
-type Material = {
-  id: number;
-  title: string;
-  file: string;
-  uploaded_at: string;
-  uploaded_by_name: string;
-};
-type Choice = {
-  id: number;
-  text: string;
-  is_correct: boolean;
-};
 
-type Question = {
-  id: number;
-  text: string;
-  question_type: string;
-  created_by: string;
-  is_approved: boolean;
-  correct_answer: string;
-  created_at: string;
-  choices: Choice[];
-};
 export default function TopicPage() {
 
   const params = useParams();
 
   const [topic, setTopic] =
     useState<Topic | null>(null);
-const [materials, setMaterials] =
-  useState<Material[]>([]);
-const [questions, setQuestions] =
-  useState<Question[]>([]);
 
 
 const [questionText, setQuestionText] =
@@ -105,13 +79,6 @@ const [creatingQuestion, setCreatingQuestion] =
 
         setTopic(
         topicResponse.data.data
-        );
-
-        setMaterials(
-        materialsResponse.data.data
-        );
-        setQuestions(
-        questionsResponse.data.data
         );
 
     } catch (error) {
@@ -345,167 +312,6 @@ const [creatingQuestion, setCreatingQuestion] =
     <h2 className="mb-6 text-3xl font-bold">
         Materials
     </h2>
-    <div className="mt-16">
-
-        <h2 className="mb-6 text-3xl font-bold">
-            Question Bank
-        </h2>
-
-        {questions.length === 0 ? (
-
-            <div className="rounded-xl border p-6 text-gray-500">
-
-            No questions available.
-
-            </div>
-
-        ) : (
-
-            <div className="space-y-6">
-
-            {questions.map((question) => (
-
-                <div
-                key={question.id}
-                className="rounded-xl border p-6 shadow-sm"
-                >
-
-                <div className="mb-4 flex items-center gap-3">
-
-                    <span className="rounded bg-gray-100 px-3 py-1 text-sm">
-
-                    {question.question_type.toUpperCase()}
-
-                    </span>
-
-                    <span
-                    className={`rounded px-3 py-1 text-sm ${
-                        question.is_approved
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                    >
-
-                    {question.is_approved
-                        ? "Approved"
-                        : "Pending"}
-
-                    </span>
-
-                    <span className="rounded bg-blue-100 px-3 py-1 text-sm text-blue-700">
-
-                    {question.created_by}
-
-                    </span>
-
-                </div>
-
-                <h3 className="text-xl font-semibold">
-
-                    {question.text}
-
-                </h3>
-
-                {question.question_type === "mcq" && (
-
-                    <div className="mt-4 space-y-2">
-
-                    {question.choices.map((choice) => (
-
-                        <div
-                        key={choice.id}
-                        className={`rounded border p-3 ${
-                            choice.is_correct
-                            ? "border-green-500 bg-green-50"
-                            : ""
-                        }`}
-                        >
-
-                        {choice.text}
-
-                        </div>
-
-                    ))}
-
-                    </div>
-
-                )}
-
-                {question.question_type === "open" && (
-
-                    <div className="mt-4 rounded border bg-gray-50 p-4">
-
-                    <p className="text-sm font-medium text-gray-500">
-
-                        Reference Answer
-
-                    </p>
-
-                    <p className="mt-2 text-gray-700">
-
-                        {question.correct_answer}
-
-                    </p>
-
-                    </div>
-
-                )}
-
-                </div>
-
-            ))}
-
-            </div>
-
-        )}
-
-    </div>
-
-    {materials.length === 0 ? (
-
-        <div className="rounded-xl border p-6 text-gray-500">
-
-        No materials uploaded.
-
-        </div>
-
-    ) : (
-
-        <div className="grid gap-6">
-
-        {materials.map((material) => (
-
-            <div
-            key={material.id}
-            className="rounded-xl border p-6 shadow-sm"
-            >
-
-            <h3 className="text-2xl font-semibold">
-                {material.title}
-            </h3>
-
-            <p className="mt-2 text-sm text-gray-500">
-
-                Uploaded by{" "}
-                {material.uploaded_by_name}
-
-            </p>
-
-            <a
-                href={`http://127.0.0.1:8000${material.file}`}
-                target="_blank"
-                className="mt-4 inline-block text-blue-600 hover:underline"
-            >
-                View File
-            </a>
-
-            </div>
-
-        ))}
-
-        </div>
-
-    )}
 
     </div>
 
