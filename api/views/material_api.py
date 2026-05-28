@@ -5,7 +5,22 @@ from materials.models import MaterialChunk
 from materials.services.chunk_service import chunk_text
 from materials.services.pdf_service import extract_pdf_text
 from materials.services.embedding_service import generate_embedding
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+)
 
+from rest_framework.permissions import (
+    IsAuthenticated,
+)
+
+from rest_framework.response import Response
+
+from materials.models import Material
+
+from materials.serializers import (
+    MaterialSerializer,
+)
 # from courses.models import Material
 from topics.models import Topic
 
@@ -80,4 +95,42 @@ def upload_material(request):
         "message": "Material uploaded successfully",
         "material_id": material.id,
         "title": material.title,
+    })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def course_materials(request, course_id):
+
+    materials = Material.objects.filter(
+        topic__course_id=course_id
+    ).order_by("-uploaded_at")
+
+    serializer = MaterialSerializer(
+        materials,
+        many=True
+    )
+
+    return Response({
+        "success": True,
+        "data": serializer.data,
+    })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def topic_materials(request, topic_id):
+
+    materials = Material.objects.filter(
+        topic_id=topic_id
+    ).order_by("-uploaded_at")
+
+    serializer = MaterialSerializer(
+        materials,
+        many=True
+    )
+
+    return Response({
+        "success": True,
+        "data": serializer.data,
     })

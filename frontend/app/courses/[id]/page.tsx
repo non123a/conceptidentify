@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { useParams } from "next/navigation";
-
+import Link from "next/link";
 import api from "@/lib/api";
 
 type Course = {
@@ -19,6 +19,21 @@ type Course = {
 
   student_count: number;
 };
+type Topic = {
+  id: number;
+  name: string;
+  description: string;
+  material_count: number;
+  question_count: number;
+};
+type Material = {
+  id: number;
+  title: string;
+  file: string;
+  uploaded_at: string;
+  uploaded_by_name: string;
+};
+
 
 export default function CourseDetailPage() {
 
@@ -26,7 +41,10 @@ export default function CourseDetailPage() {
 
   const [course, setCourse] =
     useState<Course | null>(null);
-
+    const [topics, setTopics] =
+  useState<Topic[]>([]);
+    const [materials, setMaterials] =
+    useState<Material[]>([]);
   const [loading, setLoading] =
     useState(true);
 
@@ -40,24 +58,48 @@ export default function CourseDetailPage() {
 
     try {
 
-      const response = await api.get(
-        `/courses/${params.id}/`
-      );
+        const [
+            courseResponse,
+            materialsResponse,
+            topicsResponse,
+        ] = await Promise.all([
 
-      setCourse(
-        response.data.data
-      );
+            api.get(
+            `/courses/${params.id}/`
+            ),
 
-    } catch (error) {
+            api.get(
+            `/courses/${params.id}/materials/`
+            ),
 
-      console.error(error);
+            api.get(
+            `/courses/${params.id}/topics/`
+            ),
 
-    } finally {
+        ]);
 
-      setLoading(false);
+        setCourse(
+            courseResponse.data.data
+        );
 
-    }
-  };
+        setMaterials(
+            materialsResponse.data.data
+        );
+
+        setTopics(
+            topicsResponse.data.data
+        );
+
+        } catch (error) {
+
+        console.error(error);
+
+        } finally {
+
+        setLoading(false);
+
+        }
+    };
 
   if (loading) {
 
@@ -110,57 +152,65 @@ export default function CourseDetailPage() {
 
   </div>
 
-  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+<div>
 
-    <div className="rounded-xl border p-6 shadow-sm">
+  <div className="mb-6 flex items-center justify-between">
 
-      <h2 className="text-2xl font-semibold">
-        Materials
-      </h2>
-
-      <p className="mt-2 text-gray-600">
-        Access lecture materials and documents.
-      </p>
-
-    </div>
-
-    <div className="rounded-xl border p-6 shadow-sm">
-
-      <h2 className="text-2xl font-semibold">
-        Quizzes
-      </h2>
-
-      <p className="mt-2 text-gray-600">
-        View and complete course quizzes.
-      </p>
-
-    </div>
-
-    <div className="rounded-xl border p-6 shadow-sm">
-
-      <h2 className="text-2xl font-semibold">
-        AI Assistant
-      </h2>
-
-      <p className="mt-2 text-gray-600">
-        Generate concepts and learning insights.
-      </p>
-
-    </div>
-
-    <div className="rounded-xl border p-6 shadow-sm">
-
-      <h2 className="text-2xl font-semibold">
-        Analytics
-      </h2>
-
-      <p className="mt-2 text-gray-600">
-        Track learning performance and engagement.
-      </p>
-
-    </div>
+    <h2 className="text-3xl font-bold">
+      Topics
+    </h2>
 
   </div>
+
+  {topics.length === 0 ? (
+
+    <div className="rounded-xl border p-6 text-gray-500">
+
+      No topics available.
+
+    </div>
+
+  ) : (
+
+    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+
+      {topics.map((topic) => (
+
+        <Link
+          key={topic.id}
+          className="rounded-xl border p-6 shadow-sm transition hover:shadow-md"
+          href={`/courses/${params.id}/topics/${topic.id}`}
+        >
+
+          <h3 className="text-2xl font-semibold">
+            {topic.name}
+          </h3>
+
+          <p className="mt-2 text-gray-600">
+            {topic.description || "No description"}
+          </p>
+
+          <div className="mt-4 space-y-1 text-sm text-gray-500">
+
+            <p>
+              Materials: {topic.material_count}
+            </p>
+
+            <p>
+              Questions: {topic.question_count}
+            </p>
+
+          </div>
+
+        </Link>
+
+      ))}
+
+    </div>
+
+  )}
+
+</div>
 
 </div>
   );
