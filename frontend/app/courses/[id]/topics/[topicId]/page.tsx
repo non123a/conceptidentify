@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import api from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 
 type Topic = {
   id: number;
@@ -17,42 +19,13 @@ type Topic = {
 export default function TopicPage() {
 
   const params = useParams();
+  const { user } = useAuth();
 
   const [topic, setTopic] =
     useState<Topic | null>(null);
 
-
-const [questionText, setQuestionText] =
-  useState("");
-
-const [questionType, setQuestionType] =
-  useState("open");
-
-const [correctAnswer, setCorrectAnswer] =
-  useState("");
-
-const [options, setOptions] =
-  useState([
-    "",
-    "",
-    "",
-    "",
-  ]);
-
-const [correctOption, setCorrectOption] =
-  useState(0);
-
-const [creatingQuestion, setCreatingQuestion] =
-  useState(false);
-
   const [loading, setLoading] =
     useState(true);
-
-  useEffect(() => {
-
-    fetchTopic();
-
-  }, []);
 
   const fetchTopic = async () => {
 
@@ -60,19 +33,10 @@ const [creatingQuestion, setCreatingQuestion] =
 
         const [
         topicResponse,
-        materialsResponse,
-        questionsResponse,
         ] = await Promise.all([
 
         api.get(
             `/topics/${params.topicId}/`
-        ),
-
-        api.get(
-            `/topics/${params.topicId}/materials/`
-        ),
-        api.get(
-            `/topics/${params.topicId}/questions/`
         ),
 
         ]);
@@ -91,76 +55,12 @@ const [creatingQuestion, setCreatingQuestion] =
 
     }
     };
-        const createQuestion = async () => {
 
-        try {
+  useEffect(() => {
 
-            setCreatingQuestion(true);
+    void Promise.resolve().then(fetchTopic);
 
-            const formData = new FormData();
-
-            formData.append(
-            "text",
-            questionText
-            );
-
-            formData.append(
-            "question_type",
-            questionType
-            );
-
-            if (questionType === "open") {
-
-            formData.append(
-                "correct_answer",
-                correctAnswer
-            );
-
-            } else {
-
-            options.forEach((option) => {
-
-                formData.append(
-                "options",
-                option
-                );
-
-            });
-
-            formData.append(
-                "correct_option",
-                correctOption.toString()
-            );
-
-            }
-
-            await api.post(
-            `/topics/${params.topicId}/questions/create/`,
-            formData
-            );
-
-            setQuestionText("");
-            setCorrectAnswer("");
-
-            setOptions([
-            "",
-            "",
-            "",
-            "",
-            ]);
-
-            fetchTopic();
-
-        } catch (error) {
-
-            console.error(error);
-
-        } finally {
-
-            setCreatingQuestion(false);
-
-        }
-        };
+  }, []);
   if (loading) {
 
     return (
@@ -185,127 +85,54 @@ const [creatingQuestion, setCreatingQuestion] =
       <h1 className="text-4xl font-bold">
         {topic.name}
       </h1>
-      <div className="mt-10 rounded-xl border p-6 shadow-sm">
-
-            <h2 className="mb-6 text-3xl font-bold">
-
-                Create Question
-
-            </h2>
-
-            <div className="space-y-4">
-
-                <textarea
-                placeholder="Question text"
-                value={questionText}
-                onChange={(e) =>
-                    setQuestionText(e.target.value)
-                }
-                className="w-full rounded border p-3"
-                rows={4}
-                />
-
-                <select
-                value={questionType}
-                onChange={(e) =>
-                    setQuestionType(e.target.value)
-                }
-                className="w-full rounded border p-3"
-                >
-
-                <option value="open">
-                    Open Question
-                </option>
-
-                <option value="mcq">
-                    Multiple Choice
-                </option>
-
-                </select>
-
-                {questionType === "open" && (
-
-                <textarea
-                    placeholder="Reference answer"
-                    value={correctAnswer}
-                    onChange={(e) =>
-                    setCorrectAnswer(
-                        e.target.value
-                    )
-                    }
-                    className="w-full rounded border p-3"
-                    rows={4}
-                />
-
-                )}
-
-                {questionType === "mcq" && (
-
-                <div className="space-y-3">
-
-                    {options.map((option, index) => (
-
-                    <div
-                        key={index}
-                        className="flex gap-3"
-                    >
-
-                        <input
-                        type="radio"
-                        checked={
-                            correctOption === index
-                        }
-                        onChange={() =>
-                            setCorrectOption(index)
-                        }
-                        />
-
-                        <input
-                        type="text"
-                        placeholder={`Option ${index + 1}`}
-                        value={option}
-                        onChange={(e) => {
-
-                            const newOptions = [
-                            ...options
-                            ];
-
-                            newOptions[index] =
-                            e.target.value;
-
-                            setOptions(newOptions);
-
-                        }}
-                        className="w-full rounded border p-3"
-                        />
-
-                    </div>
-
-                    ))}
-
-                </div>
-
-                )}
-
-                <button
-                onClick={createQuestion}
-                disabled={creatingQuestion}
-                className="rounded bg-black px-6 py-3 text-white"
-                >
-
-                {creatingQuestion
-                    ? "Creating..."
-                    : "Create Question"}
-
-                </button>
-
-            </div>
-
-            </div>
 
       <p className="mt-4 text-gray-600">
         {topic.description || "No description"}
       </p>
+
+      <div className="mt-10 rounded-xl border p-6 shadow-sm">
+
+        {user?.role === "lecturer" ? (
+
+          <div className="grid gap-3 md:grid-cols-3">
+
+            <Link
+              href={`/courses/${params.id}/topics/${params.topicId}/create`}
+              className="rounded-lg border bg-black px-4 py-3 text-center text-sm font-medium text-white transition hover:opacity-90"
+            >
+              Create Questions
+            </Link>
+
+            <Link
+              href={`/courses/${params.id}/topics/${params.topicId}/questions`}
+              className="rounded-lg border px-4 py-3 text-center text-sm font-medium transition hover:bg-gray-50"
+            >
+              Question Bank
+            </Link>
+
+            <Link
+              href={`/courses/${params.id}/topics/${params.topicId}/analytics`}
+              className="rounded-lg border px-4 py-3 text-center text-sm font-medium transition hover:bg-gray-50"
+            >
+              Analytics
+            </Link>
+
+          </div>
+
+        ) : (
+
+          <div>
+            <h2 className="text-2xl font-bold">
+              Topic Quiz
+            </h2>
+            <p className="mt-3 text-gray-600">
+              Answer questions and review your results from this topic.
+            </p>
+          </div>
+
+        )}
+
+      </div>
 
     <div className="mt-10">
 

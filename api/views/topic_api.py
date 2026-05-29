@@ -6,6 +6,7 @@ from rest_framework.decorators import (
 from rest_framework.permissions import (
     IsAuthenticated,
 )
+from api.permissions import IsLecturer
 
 from rest_framework.response import Response
 
@@ -51,7 +52,7 @@ def course_topics(request, course_id):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsLecturer])
 def create_topic(request, course_id):
 
     try:

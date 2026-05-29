@@ -5,6 +5,7 @@ from materials.models import MaterialChunk
 from materials.services.chunk_service import chunk_text
 from materials.services.pdf_service import extract_pdf_text
 from materials.services.embedding_service import generate_embedding
+from api.permissions import IsLecturer
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -26,7 +27,7 @@ from topics.models import Topic
 
 from materials.models import Material
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsLecturer])
 def upload_material(request):
 
     title = request.data.get('title')

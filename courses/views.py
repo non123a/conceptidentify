@@ -349,6 +349,9 @@ def clean_choice(text):
 def bulk_create_questions(request, course_id, topic_id):
 
     if request.method == "POST":
+        if request.user.role != "lecturer":
+            return JsonResponse({"error": "Forbidden. Lecturers only."}, status=403)
+            
         data = json.loads(request.body)
         questions = data.get("questions", [])
 
@@ -395,6 +398,9 @@ def bulk_create_questions(request, course_id, topic_id):
 
 
 def generate_topic_questions(request, course_id, topic_id):
+    
+    if request.user.role != "lecturer":
+        return JsonResponse({"error": "Forbidden. Lecturers only."}, status=403)
 
     topic = get_object_or_404(Topic, id=topic_id)
 
@@ -427,6 +433,9 @@ def edit_question(request, course_id, topic_id, question_id):
 
     question = get_object_or_404(Question, id=question_id)
 
+    if request.user.role != "lecturer":
+        return redirect("course_detail", course_id=course_id)
+
     if request.method == "POST":
         question.text = request.POST.get("text")
 
@@ -457,6 +466,10 @@ def edit_question(request, course_id, topic_id, question_id):
 
 
 def delete_question(request, course_id, topic_id, question_id):
+
+    if request.user.role != "lecturer":
+        return JsonResponse({"error": "Forbidden. Lecturers only."}, status=403)
+        
     question = get_object_or_404(Question, id=question_id)
 
     if request.method == "POST":
@@ -466,6 +479,10 @@ def delete_question(request, course_id, topic_id, question_id):
     return JsonResponse({"status": "error"})
 
 def toggle_question_status(request, course_id, topic_id, question_id):
+
+    if request.user.role != "lecturer":
+        return redirect("course_detail", course_id=course_id)
+        
     question = get_object_or_404(Question, id=question_id)
 
     question.is_approved = not question.is_approved

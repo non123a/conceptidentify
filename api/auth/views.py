@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.conf import settings
 from django.contrib.auth import authenticate
 
 from .serializers import LoginSerializer, UserSerializer
@@ -34,15 +35,31 @@ class LoginView(APIView):
 
             refresh = RefreshToken.for_user(user)
 
-            return Response({
+            response = Response({
                 "success": True,
                 "message": "Login successful",
                 "data": {
-                    "access": str(refresh.access_token),
-                    "refresh": str(refresh),
                     "user": UserSerializer(user).data
                 }
             })
+
+            response.set_cookie(
+                key='access',
+                value=str(refresh.access_token),
+                httponly=True,
+                secure=not settings.DEBUG,
+                samesite='Lax'
+            )
+            
+            response.set_cookie(
+                key='refresh',
+                value=str(refresh),
+                httponly=True,
+                secure=not settings.DEBUG,
+                samesite='Lax'
+            )
+            
+            return response
 
         return Response(
             {
@@ -51,6 +68,14 @@ class LoginView(APIView):
             },
             status=status.HTTP_400_BAD_REQUEST
         )
+
+class LogoutView(APIView):
+    def post(self, request):
+        response = Response({"success": True, "message": "Successfully logged out"})
+        response.delete_cookie('access')
+        response.delete_cookie('refresh')
+        return response
+
 class MeView(APIView):
 
     permission_classes = [IsAuthenticated]

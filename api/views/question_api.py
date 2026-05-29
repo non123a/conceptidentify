@@ -6,6 +6,7 @@ from rest_framework.decorators import (
 from rest_framework.permissions import (
     IsAuthenticated,
 )
+from api.permissions import IsLecturer
 
 from rest_framework.response import (
     Response,
@@ -26,7 +27,7 @@ from assessments.serializers import (
 )
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsLecturer])
 def topic_questions(request, topic_id):
 
     questions = Question.objects.filter(
@@ -45,7 +46,7 @@ def topic_questions(request, topic_id):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsLecturer])
 def create_question(request, topic_id):
 
     text = request.data.get("text")
@@ -105,7 +106,7 @@ def create_question(request, topic_id):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsLecturer])
 def generate_topic_questions(request, topic_id):
 
     topic = get_object_or_404(
@@ -166,7 +167,7 @@ def clean_choice(text):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsLecturer])
 def bulk_create_questions(request, topic_id):
 
     topic = get_object_or_404(
@@ -231,7 +232,7 @@ def bulk_create_questions(request, topic_id):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsLecturer])
 def toggle_question_status(request, question_id):
 
     question = get_object_or_404(
@@ -249,7 +250,7 @@ def toggle_question_status(request, question_id):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsLecturer])
 def delete_question(request, question_id):
 
     question = get_object_or_404(
@@ -266,7 +267,7 @@ def delete_question(request, question_id):
 
 
 @api_view(["PUT"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsLecturer])
 def edit_question(request, question_id):
 
     question = get_object_or_404(

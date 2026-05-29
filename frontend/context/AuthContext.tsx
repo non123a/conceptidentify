@@ -36,18 +36,7 @@ export function AuthProvider({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchUser();
-  }, []);
-
   const fetchUser = async () => {
-
-    const token = localStorage.getItem("access");
-
-    if (!token) {
-      setLoading(false);
-      return;
-    }
 
     try {
 
@@ -55,10 +44,9 @@ export function AuthProvider({
 
       setUser(response.data.data);
 
-    } catch (error) {
+    } catch {
 
-      localStorage.removeItem("access");
-      localStorage.removeItem("refresh");
+      setUser(null);
 
     } finally {
 
@@ -67,33 +55,9 @@ export function AuthProvider({
     }
   };
 
-//   const login = async (
-//     username: string,
-//     password: string
-//   ) => {
-
-//     try {
-
-//       const response = await api.post("/auth/login/", {
-//         username,
-//         password,
-//       });
-
-//       const data = response.data.data;
-
-//       localStorage.setItem("access", data.access);
-//       localStorage.setItem("refresh", data.refresh);
-
-//       setUser(data.user);
-
-//       return true;
-
-//     } catch (error) {
-
-//       return false;
-
-//     }
-//   };
+  useEffect(() => {
+    void Promise.resolve().then(fetchUser);
+  }, []);
   const login = async (
     username: string,
     password: string
@@ -103,15 +67,10 @@ export function AuthProvider({
 
         setLoading(true);
 
-        const response = await api.post("/auth/login/", {
+        await api.post("/auth/login/", {
         username,
         password,
         });
-
-        const data = response.data.data;
-
-        localStorage.setItem("access", data.access);
-        localStorage.setItem("refresh", data.refresh);
 
         // Fetch fresh user from backend
         const meResponse = await api.get("/auth/me/");
@@ -121,7 +80,7 @@ export function AuthProvider({
         return true;
 
     } catch (error) {
-        console.log(error.response?.data);
+        console.log(error);
         return false;
 
     } finally {
@@ -130,11 +89,13 @@ export function AuthProvider({
 
     }
     };
-  const logout = () => {
+  const logout = async () => {
 
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-
+    try {
+      await api.post("/auth/logout/");
+    } catch (error) {
+      console.log("Logout failed", error);
+    }
     setUser(null);
   };
 

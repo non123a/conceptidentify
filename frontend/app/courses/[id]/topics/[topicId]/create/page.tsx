@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import RoleGuard from "@/components/RoleGuard";
 import { useParams } from "next/navigation";
 
 import api from "@/lib/api";
@@ -363,6 +363,7 @@ const toggleQuestionSelection = (
   }
 
   return (
+    <RoleGuard allowedRole="lecturer">
     <div className="p-10">
 
       <div className="mb-10">
@@ -783,6 +784,7 @@ const toggleQuestionSelection = (
       </div>
 
     </div>
+  </RoleGuard>
   );
 }
 

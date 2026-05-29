@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import api from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 import Link from "next/link";
 type Course = {
@@ -33,6 +34,7 @@ type Topic = {
 export default function CourseDetailPage() {
 
   const params = useParams();
+  const { user } = useAuth();
 
   const [course, setCourse] =
     useState<Course | null>(null);
@@ -41,12 +43,6 @@ export default function CourseDetailPage() {
 
   const [loading, setLoading] =
     useState(true);
-
-  useEffect(() => {
-
-    fetchCourse();
-
-  }, []);
 
   const fetchCourse = async () => {
 
@@ -87,6 +83,12 @@ export default function CourseDetailPage() {
 
         }
     };
+
+  useEffect(() => {
+
+    void Promise.resolve().then(fetchCourse);
+
+  }, []);
 
   if (loading) {
 
@@ -188,6 +190,9 @@ export default function CourseDetailPage() {
           </div>
             <div className="mt-6 grid gap-3">
 
+              {user?.role === "lecturer" ? (
+                <>
+
                 <Link
                     href={`/courses/${params.id}/topics/${topic.id}/create`}
                     className="rounded-lg border bg-black px-4 py-3 text-center text-sm font-medium text-white transition hover:opacity-90"
@@ -214,6 +219,18 @@ export default function CourseDetailPage() {
                     Analytics
 
                 </Link>
+
+                </>
+              ) : (
+                <Link
+                    href={`/courses/${params.id}/topics/${topic.id}`}
+                    className="rounded-lg border bg-black px-4 py-3 text-center text-sm font-medium text-white transition hover:opacity-90"
+                >
+
+                    Answer Questions
+
+                </Link>
+              )}
 
                 </div>
 

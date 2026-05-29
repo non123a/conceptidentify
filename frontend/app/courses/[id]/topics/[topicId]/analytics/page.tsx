@@ -1,6 +1,6 @@
 
 "use client";
-
+import RoleGuard from "@/components/RoleGuard";
 import { useEffect, useState } from "react";
 
 import { useParams } from "next/navigation";
@@ -71,6 +71,7 @@ export default function AnalyticsPage() {
   }
 
   return (
+    <RoleGuard allowedRole="lecturer">
     <div className="p-10">
 
       <div className="mb-10">
@@ -156,6 +157,7 @@ export default function AnalyticsPage() {
       </div>
 
     </div>
+    </RoleGuard>
   );
 }
 

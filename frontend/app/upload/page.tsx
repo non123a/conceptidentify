@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import api from "@/services/api";
+import RoleGuard from "@/components/RoleGuard";
+import api from "@/lib/api";
 
 export default function UploadPage() {
   const [title, setTitle] = useState("");
@@ -25,17 +26,9 @@ export default function UploadPage() {
     formData.append("file", file);
 
     try {
-        const token = localStorage.getItem("access");
-        
         const response = await api.post(
             "/materials/upload/",
-            formData,
-            {
-            headers: {
-                "Content-Type": "multipart/form-data",
-                Authorization: `Bearer ${token}`,
-            },
-            }
+            formData
         );
 
         setMessage(response.data.message);
@@ -47,6 +40,7 @@ export default function UploadPage() {
   };
 
   return (
+    <RoleGuard allowedRole="lecturer">
     <div className="p-10">
       <h1 className="mb-6 text-3xl font-bold">
         Upload Material
@@ -96,5 +90,6 @@ export default function UploadPage() {
         </p>
       )}
     </div>
+    </RoleGuard>
   );
 }

@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import RoleGuard from "@/components/RoleGuard";
 import { useParams } from "next/navigation";
 
 import api from "@/lib/api";
@@ -252,22 +252,27 @@ export default function QuestionsPage() {
   if (loading) {
 
     return (
+      <RoleGuard allowedRole="lecturer">
       <div className="p-10">
         Loading questions...
       </div>
+      </RoleGuard>
     );
   }
 
   if (!topic) {
 
     return (
+      <RoleGuard allowedRole="lecturer">
       <div className="p-10 text-red-500">
         Topic not found
       </div>
+      </RoleGuard>
     );
   }
 
   return (
+    <RoleGuard allowedRole="lecturer">
     <div className="p-10">
 
       <div className="mb-10">
@@ -577,5 +582,6 @@ export default function QuestionsPage() {
       )}
 
     </div>
+    </RoleGuard>
   );
 }
