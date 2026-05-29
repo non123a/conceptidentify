@@ -10,11 +10,16 @@ from rest_framework.permissions import (
 from rest_framework.response import (
     Response,
 )
+from rest_framework import status
+from django.shortcuts import get_object_or_404
 
 from assessments.models import (
     Question,
     Choice,
 )
+from topics.models import Topic
+from materials.models import Material
+from services.ai.question_generator import generate_questions
 
 from assessments.serializers import (
     QuestionSerializer,
@@ -96,4 +101,130 @@ def create_question(request, topic_id):
         "success": True,
         "message": "Question created",
         "data": serializer.data,
+    })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def generate_topic_questions(request, topic_id):
+
+    topic = get_object_or_404(
+        Topic,
+        id=topic_id
+    )
+
+    materials = Material.objects.filter(
+        topic=topic
+    )
+
+    material_text = " ".join([
+        material.extracted_text or ""
+        for material in materials
+    ])
+
+    question_type = request.query_params.get(
+        "type",
+        "mcq"
+    )
+
+    count = int(
+        request.query_params.get(
+            "count",
+            3
+        )
+    )
+
+    custom_prompt = request.query_params.get(
+        "prompt",
+        ""
+    )
+
+    questions = generate_questions(
+        topic.name,
+        material_text,
+        num_questions=count,
+        question_type=question_type,
+        custom_prompt=custom_prompt
+    )
+
+    if not questions:
+
+        return Response({
+            "success": False,
+            "message": "AI service temporarily unavailable",
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    return Response({
+        "success": True,
+        "questions": questions,
+    })
+
+
+def clean_choice(text):
+    import re
+    return re.sub(r'^[A-D]\.\s*', '', text).strip()
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def bulk_create_questions(request, topic_id):
+
+    topic = get_object_or_404(
+        Topic,
+        id=topic_id
+    )
+
+    questions = request.data.get(
+        "questions",
+        []
+    )
+
+    for question_data in questions:
+
+        question_type = question_data.get(
+            "type"
+        )
+
+        correct_answer = (
+            question_data.get("correct_answer")
+            or question_data.get("reference_answer", "")
+        )
+
+        question = Question.objects.create(
+            topic=topic,
+            text=question_data.get("question", ""),
+            question_type=question_type,
+            correct_answer=correct_answer,
+            created_by="lecturer",
+            is_approved=True,
+        )
+
+        if question_type == "mcq":
+
+            choices = question_data.get(
+                "choices",
+                []
+            )
+
+            cleaned_correct_answer = clean_choice(
+                correct_answer
+            )
+
+            for choice_text in choices:
+
+                cleaned_text = clean_choice(
+                    choice_text
+                )
+
+                Choice.objects.create(
+                    question=question,
+                    text=cleaned_text,
+                    is_correct=(
+                        cleaned_text == cleaned_correct_answer
+                    )
+                )
+
+    return Response({
+        "success": True,
+        "message": "Questions saved",
     })

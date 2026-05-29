@@ -134,18 +134,26 @@ Retrieved Learning Material:
 
             except Exception as e:
                 last_error = e
+                error_text = str(e).lower()
 
-                if "503" in str(e) and attempt < max_retries - 1:
+                is_temporary_failure = (
+                    "503" in error_text
+                    or "unavailable" in error_text
+                    or isinstance(e, TimeoutError)
+                )
+
+                if is_temporary_failure and attempt < max_retries - 1:
                     wait = min(2 ** attempt, 10)
                     print(f"🔄 RETRY {attempt+1} in {wait}s")
                     time.sleep(wait)
                     continue
 
-                if "404" in str(e):
+                if "404" in error_text:
                     print(f"⚠️ Model {model_name} unavailable")
                     break
 
-                raise
+                print(f"⚠️ Model {model_name} failed:", e)
+                break
 
         if response is not None:
             break

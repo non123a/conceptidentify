@@ -20,7 +20,13 @@ type Material = {
   uploaded_at: string;
   uploaded_by_name: string;
 };
-
+type GeneratedQuestion = {
+  question: string;
+  type: string;
+  choices?: string[];
+  correct_answer?: string;
+  reference_answer?: string;
+};
 export default function CreatePage() {
 
   const params = useParams();
@@ -30,6 +36,23 @@ export default function CreatePage() {
 
   const [materials, setMaterials] =
     useState<Material[]>([]);
+   const [aiPrompt, setAiPrompt] =
+  useState("");
+
+const [aiQuestionType, setAiQuestionType] =
+  useState("mcq");
+
+const [aiCount, setAiCount] =
+  useState(3);
+
+const [generatingAi, setGeneratingAi] =
+  useState(false);
+
+const [generatedQuestions, setGeneratedQuestions] =
+  useState<GeneratedQuestion[]>([]);
+
+const [savingGenerated, setSavingGenerated] =
+  useState(false);
 
   const [loading, setLoading] =
     useState(true);
@@ -102,7 +125,10 @@ export default function CreatePage() {
   };
 
   const createQuestion = async () => {
-
+    if (!questionText.trim()) {
+    alert("Question text required");
+    return;
+    }
     try {
 
       setCreatingQuestion(true);
@@ -171,6 +197,72 @@ export default function CreatePage() {
 
     }
   };
+  const generateAiQuestions = async () => {
+
+  try {
+
+    setGeneratingAi(true);
+    console.log(
+    `/topics/${params.topicId}/generate/`
+    );
+    const response = await api.get(
+
+      `/topics/${params.topicId}/generate/`,
+
+      {
+        params: {
+          type: aiQuestionType,
+          count: aiCount,
+          prompt: aiPrompt,
+        },
+      }
+
+    );
+
+    setGeneratedQuestions(
+      response.data.questions
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+  } finally {
+
+    setGeneratingAi(false);
+
+  }
+};
+const saveGeneratedQuestions = async () => {
+
+  try {
+
+    setSavingGenerated(true);
+
+    await api.post(
+
+      `/topics/${params.topicId}/bulk-create/`,
+
+      {
+        questions: generatedQuestions,
+      }
+
+    );
+
+    alert("Questions saved");
+
+    setGeneratedQuestions([]);
+
+  } catch (error) {
+
+    console.error(error);
+
+  } finally {
+
+    setSavingGenerated(false);
+
+  }
+};
 
   if (loading) {
 
@@ -296,7 +388,7 @@ export default function CreatePage() {
                         e.target.value;
 
                       setOptions(newOptions);
-
+                      setCorrectOption(0);
                     }}
                     className="w-full rounded border p-3"
                   />
@@ -324,7 +416,183 @@ export default function CreatePage() {
         </div>
 
       </div>
+    <div className="mt-10 rounded-xl border p-6 shadow-sm">
 
+        <h2 className="mb-6 text-2xl font-bold">
+
+            AI Question Generation
+
+        </h2>
+
+        <div className="space-y-4">
+
+            <textarea
+            placeholder="Custom AI instruction..."
+            value={aiPrompt}
+            onChange={(e) =>
+                setAiPrompt(e.target.value)
+            }
+            className="w-full rounded border p-3"
+            rows={4}
+            />
+
+            <div className="grid gap-4 md:grid-cols-2">
+
+            <select
+                value={aiQuestionType}
+                onChange={(e) =>
+                setAiQuestionType(
+                    e.target.value
+                )
+                }
+                className="rounded border p-3"
+            >
+
+                <option value="mcq">
+                Multiple Choice
+                </option>
+
+                <option value="open">
+                Open Question
+                </option>
+
+            </select>
+
+            <input
+                type="number"
+                min={1}
+                max={10}
+                value={aiCount}
+                onChange={(e) =>
+                setAiCount(
+                    Number(e.target.value)
+                )
+                }
+                className="rounded border p-3"
+            />
+
+            </div>
+
+            <button
+            onClick={generateAiQuestions}
+            disabled={generatingAi}
+            className="rounded bg-black px-6 py-3 text-white"
+            >
+
+            {generatingAi
+                ? "Generating..."
+                : "Generate AI Questions"}
+
+            </button>
+
+        </div>
+
+        </div>
+        {generatedQuestions.length > 0 && (
+
+  <div className="mt-10 rounded-xl border p-6 shadow-sm">
+
+    <div className="mb-6 flex items-center justify-between">
+
+      <h2 className="text-2xl font-bold">
+
+        Generated Questions
+
+      </h2>
+
+      <button
+        onClick={saveGeneratedQuestions}
+        disabled={savingGenerated}
+        className="rounded bg-green-600 px-5 py-3 text-white"
+      >
+
+        {savingGenerated
+          ? "Saving..."
+          : "Approve & Save"}
+
+      </button>
+
+    </div>
+
+    <div className="space-y-6">
+
+      {generatedQuestions.map((question, index) => (
+
+        <div
+          key={index}
+          className="rounded-lg border p-5"
+        >
+
+          <div className="mb-3">
+
+            <span className="rounded bg-gray-100 px-3 py-1 text-sm">
+
+              {question.type.toUpperCase()}
+
+            </span>
+
+          </div>
+
+          <h3 className="text-lg font-semibold">
+
+            {question.question}
+
+          </h3>
+
+          {question.type === "mcq" && (
+
+            <div className="mt-4 space-y-2">
+
+              {question.choices?.map((choice, i) => (
+
+                <div
+                  key={i}
+                  className={`rounded border p-3 ${
+                    choice === question.correct_answer
+                      ? "border-green-500 bg-green-50"
+                      : ""
+                  }`}
+                >
+
+                  {choice}
+
+                </div>
+
+              ))}
+
+            </div>
+
+          )}
+
+          {question.type === "open" && (
+
+            <div className="mt-4 rounded border bg-gray-50 p-4">
+
+              <p className="text-sm font-medium text-gray-500">
+
+                Reference Answer
+
+              </p>
+
+              <p className="mt-2 text-gray-700">
+
+                {question.reference_answer}
+
+              </p>
+
+            </div>
+
+          )}
+
+        </div>
+
+      ))}
+
+    </div>
+
+  </div>
+
+)}
       <div className="mt-10">
 
         <h2 className="mb-6 text-3xl font-bold">
@@ -365,6 +633,7 @@ export default function CreatePage() {
                   href={`http://127.0.0.1:8000${material.file}`}
                   target="_blank"
                   className="mt-4 inline-block text-blue-600 hover:underline"
+                  rel="noopener noreferrer"
                 >
                   View File
                 </a>

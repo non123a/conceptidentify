@@ -13,6 +13,8 @@ from api.views.topic_api import (
 from api.views.question_api import (
     topic_questions,
     create_question,
+    generate_topic_questions,
+    bulk_create_questions,
 )
 
 from api.views.course_api import (
@@ -84,6 +86,17 @@ urlpatterns = [
         "topics/<int:topic_id>/questions/create/",
         create_question,
         name="create_question",
+    ),
+    path(
+        "topics/<int:topic_id>/generate/",
+        generate_topic_questions,
+        name="generate_questions",
+    ),
+
+    path(
+        "topics/<int:topic_id>/bulk-create/",
+        bulk_create_questions,
+        name="bulk_create_questions",
     ),
             
 ]

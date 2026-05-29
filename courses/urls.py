@@ -10,7 +10,7 @@ urlpatterns = [
     path('lecturer-dashboard/<int:course_id>/', lecturer_dashboard, name='lecturer_dashboard'),
     path('join/', join_course, name='join_course'),   # 🔥 NEW
     path('my-courses/', student_courses, name='student_courses'),
-    path('<int:course_id>/', course_detail, name='course_detail'),
+    
     path('create/', create_course, name='create_course'),
     path('<int:course_id>/topic/<int:topic_id>/', topic_questions, name='topic_questions'),
     path('<int:course_id>/topic/<int:topic_id>/performance/', topic_performance, name='topic_performance'),
@@ -23,6 +23,7 @@ urlpatterns = [
     path('<int:course_id>/topic/<int:topic_id>/question/<int:question_id>/edit/',edit_question,name='edit_question'),
     path('<int:course_id>/topic/<int:topic_id>/question/<int:question_id>/delete/',delete_question,name='delete_question'),
     path('<int:course_id>/topic/<int:topic_id>/question/<int:question_id>/toggle/',toggle_question_status,name='toggle_question_status'),
+    path('<int:course_id>/', course_detail, name='course_detail'),
 ]
 
 if settings.DEBUG:
