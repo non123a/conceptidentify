@@ -228,3 +228,95 @@ def bulk_create_questions(request, topic_id):
         "success": True,
         "message": "Questions saved",
     })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def toggle_question_status(request, question_id):
+
+    question = get_object_or_404(
+        Question,
+        id=question_id
+    )
+
+    question.is_approved = not question.is_approved
+    question.save()
+
+    return Response({
+        "success": True,
+        "is_approved": question.is_approved,
+    })
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_question(request, question_id):
+
+    question = get_object_or_404(
+        Question,
+        id=question_id
+    )
+
+    question.delete()
+
+    return Response({
+        "success": True,
+        "message": "Question deleted",
+    })
+
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def edit_question(request, question_id):
+
+    question = get_object_or_404(
+        Question,
+        id=question_id
+    )
+
+    question.text = request.data.get(
+        "text",
+        question.text
+    )
+
+    if question.question_type == "open":
+
+        question.correct_answer = request.data.get(
+            "correct_answer",
+            ""
+        )
+
+    question.save()
+
+    if question.question_type == "mcq":
+
+        choices = request.data.get(
+            "choices",
+            []
+        )
+
+        correct_index = int(
+            request.data.get(
+                "correct_option",
+                0
+            )
+        )
+
+        question.choices.all().delete()
+
+        for index, choice_text in enumerate(choices):
+
+            if choice_text.strip():
+
+                Choice.objects.create(
+                    question=question,
+                    text=choice_text,
+                    is_correct=(
+                        index == correct_index
+                    )
+                )
+
+    return Response({
+        "success": True,
+        "message": "Question updated",
+    })

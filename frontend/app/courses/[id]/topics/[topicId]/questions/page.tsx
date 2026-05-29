@@ -43,6 +43,30 @@ export default function QuestionsPage() {
   const [loading, setLoading] =
     useState(true);
 
+  const [togglingQuestionId, setTogglingQuestionId] =
+    useState<number | null>(null);
+
+  const [deletingQuestionId, setDeletingQuestionId] =
+    useState<number | null>(null);
+
+  const [editingQuestionId, setEditingQuestionId] =
+    useState<number | null>(null);
+
+  const [savingQuestionId, setSavingQuestionId] =
+    useState<number | null>(null);
+
+  const [editText, setEditText] =
+    useState("");
+
+  const [editCorrectAnswer, setEditCorrectAnswer] =
+    useState("");
+
+  const [editChoices, setEditChoices] =
+    useState<string[]>([]);
+
+  const [editCorrectOption, setEditCorrectOption] =
+    useState(0);
+
   useEffect(() => {
 
     fetchPage();
@@ -83,6 +107,144 @@ export default function QuestionsPage() {
     } finally {
 
       setLoading(false);
+
+    }
+  };
+
+  const toggleQuestionStatus = async (
+    questionId: number
+  ) => {
+
+    try {
+
+      setTogglingQuestionId(questionId);
+
+      const response = await api.post(
+        `/questions/${questionId}/toggle/`
+      );
+
+      setQuestions((currentQuestions) =>
+        currentQuestions.map((question) =>
+          question.id === questionId
+            ? {
+                ...question,
+                is_approved:
+                  response.data.is_approved,
+              }
+            : question
+        )
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+    } finally {
+
+      setTogglingQuestionId(null);
+
+    }
+  };
+
+  const deleteQuestion = async (
+    questionId: number
+  ) => {
+
+    try {
+
+      setDeletingQuestionId(questionId);
+
+      await api.delete(
+        `/questions/${questionId}/delete/`
+      );
+
+      setQuestions((currentQuestions) =>
+        currentQuestions.filter(
+          (question) =>
+            question.id !== questionId
+        )
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+    } finally {
+
+      setDeletingQuestionId(null);
+
+    }
+  };
+
+  const startEditQuestion = (
+    question: Question
+  ) => {
+
+    setEditingQuestionId(question.id);
+    setEditText(question.text);
+    setEditCorrectAnswer(
+      question.correct_answer || ""
+    );
+    setEditChoices(
+      question.choices.map((choice) =>
+        choice.text
+      )
+    );
+
+    const correctIndex =
+      question.choices.findIndex(
+        (choice) => choice.is_correct
+      );
+
+    setEditCorrectOption(
+      correctIndex >= 0 ? correctIndex : 0
+    );
+  };
+
+  const cancelEditQuestion = () => {
+
+    setEditingQuestionId(null);
+    setEditText("");
+    setEditCorrectAnswer("");
+    setEditChoices([]);
+    setEditCorrectOption(0);
+  };
+
+  const saveQuestionEdit = async (
+    question: Question
+  ) => {
+
+    try {
+
+      setSavingQuestionId(question.id);
+
+      const payload =
+        question.question_type === "mcq"
+          ? {
+              text: editText,
+              choices: editChoices,
+              correct_option: editCorrectOption,
+            }
+          : {
+              text: editText,
+              correct_answer: editCorrectAnswer,
+            };
+
+      await api.put(
+        `/questions/${question.id}/edit/`,
+        payload
+      );
+
+      cancelEditQuestion();
+      fetchPage();
+
+    } catch (error) {
+
+      console.error(error);
+
+    } finally {
+
+      setSavingQuestionId(null);
 
     }
   };
@@ -169,7 +331,187 @@ export default function QuestionsPage() {
 
                 </span>
 
+                <button
+                  type="button"
+                  onClick={() =>
+                    toggleQuestionStatus(
+                      question.id
+                    )
+                  }
+                  disabled={
+                    togglingQuestionId ===
+                    question.id
+                  }
+                  className="rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
+                >
+
+                  {togglingQuestionId ===
+                  question.id
+                    ? "Updating..."
+                    : question.is_approved
+                      ? "Unapprove"
+                      : "Approve"}
+
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    startEditQuestion(question)
+                  }
+                  className="rounded border px-3 py-1 text-sm"
+                >
+
+                  Edit
+
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    deleteQuestion(question.id)
+                  }
+                  disabled={
+                    deletingQuestionId ===
+                    question.id
+                  }
+                  className="rounded bg-red-600 px-3 py-1 text-sm text-white disabled:opacity-50"
+                >
+
+                  {deletingQuestionId ===
+                  question.id
+                    ? "Deleting..."
+                    : "Delete"}
+
+                </button>
+
               </div>
+
+              {editingQuestionId ===
+              question.id ? (
+
+                <div className="space-y-4">
+
+                  <textarea
+                    value={editText}
+                    onChange={(event) =>
+                      setEditText(
+                        event.target.value
+                      )
+                    }
+                    className="w-full rounded border p-3"
+                    rows={4}
+                  />
+
+                  {question.question_type ===
+                    "open" && (
+
+                    <textarea
+                      value={editCorrectAnswer}
+                      onChange={(event) =>
+                        setEditCorrectAnswer(
+                          event.target.value
+                        )
+                      }
+                      className="w-full rounded border p-3"
+                      rows={4}
+                    />
+
+                  )}
+
+                  {question.question_type ===
+                    "mcq" && (
+
+                    <div className="space-y-3">
+
+                      {editChoices.map(
+                        (choice, index) => (
+
+                          <div
+                            key={index}
+                            className="flex gap-3"
+                          >
+
+                            <input
+                              type="radio"
+                              checked={
+                                editCorrectOption ===
+                                index
+                              }
+                              onChange={() =>
+                                setEditCorrectOption(
+                                  index
+                                )
+                              }
+                            />
+
+                            <input
+                              type="text"
+                              value={choice}
+                              onChange={(event) => {
+                                const nextChoices = [
+                                  ...editChoices,
+                                ];
+
+                                nextChoices[index] =
+                                  event.target.value;
+
+                                setEditChoices(
+                                  nextChoices
+                                );
+                              }}
+                              className="w-full rounded border p-3"
+                            />
+
+                          </div>
+
+                        )
+                      )}
+
+                    </div>
+
+                  )}
+
+                  <div className="flex gap-3">
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        saveQuestionEdit(
+                          question
+                        )
+                      }
+                      disabled={
+                        savingQuestionId ===
+                        question.id
+                      }
+                      className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+                    >
+
+                      {savingQuestionId ===
+                      question.id
+                        ? "Saving..."
+                        : "Save"}
+
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={cancelEditQuestion}
+                      className="rounded border px-4 py-2 text-sm"
+                    >
+
+                      Cancel
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+              ) : (
+
+              <>
 
               <h2 className="text-xl font-semibold">
 
@@ -222,6 +564,10 @@ export default function QuestionsPage() {
 
               )}
 
+              </>
+
+              )}
+
             </div>
 
           ))}
@@ -233,4 +579,3 @@ export default function QuestionsPage() {
     </div>
   );
 }
-

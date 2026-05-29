@@ -50,7 +50,8 @@ const [generatingAi, setGeneratingAi] =
 
 const [generatedQuestions, setGeneratedQuestions] =
   useState<GeneratedQuestion[]>([]);
-
+const [selectedQuestions, setSelectedQuestions] =
+  useState<number[]>([]);
 const [savingGenerated, setSavingGenerated] =
   useState(false);
 
@@ -244,7 +245,11 @@ const saveGeneratedQuestions = async () => {
       `/topics/${params.topicId}/bulk-create/`,
 
       {
-        questions: generatedQuestions,
+        // questions: generatedQuestions,
+        questions: generatedQuestions.filter(
+        (_, index) =>
+            selectedQuestions.includes(index)
+        ),
       }
 
     );
@@ -262,6 +267,81 @@ const saveGeneratedQuestions = async () => {
     setSavingGenerated(false);
 
   }
+};
+const removeGeneratedQuestion = (
+  index: number
+) => {
+
+  const updated =
+    generatedQuestions.filter(
+      (_, i) => i !== index
+    );
+
+  setGeneratedQuestions(updated);
+
+  setSelectedQuestions((prev) =>
+    prev.filter((id) => id !== index)
+  );
+};
+const editGeneratedQuestion = (
+  question: GeneratedQuestion
+) => {
+
+  setQuestionText(
+    question.question
+  );
+
+  setQuestionType(
+    question.type
+  );
+
+  if (question.type === "open") {
+
+    setCorrectAnswer(
+      question.reference_answer || ""
+    );
+
+  }
+
+  if (question.type === "mcq") {
+
+    setOptions(
+      question.choices || [
+        "",
+        "",
+        "",
+        "",
+      ]
+    );
+
+    const correctIndex =
+      question.choices?.findIndex(
+        (choice) =>
+          choice === question.correct_answer
+      ) || 0;
+
+    setCorrectOption(correctIndex);
+
+  }
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+};
+const toggleQuestionSelection = (
+  index: number
+) => {
+
+  setSelectedQuestions((prev) =>
+
+    prev.includes(index)
+
+      ? prev.filter((id) => id !== index)
+
+      : [...prev, index]
+
+  );
 };
 
   if (loading) {
@@ -502,13 +582,20 @@ const saveGeneratedQuestions = async () => {
 
       <button
         onClick={saveGeneratedQuestions}
-        disabled={savingGenerated}
+        disabled={
+        savingGenerated ||
+        selectedQuestions.length === 0
+        }
         className="rounded bg-green-600 px-5 py-3 text-white"
+        
       >
 
         {savingGenerated
           ? "Saving..."
-          : "Approve & Save"}
+          : "Approve & Save"
+          }
+        
+          
 
       </button>
 
@@ -522,6 +609,53 @@ const saveGeneratedQuestions = async () => {
           key={index}
           className="rounded-lg border p-5"
         >
+            <div className="mb-4 flex items-center justify-between">
+
+  <label className="flex items-center gap-2">
+
+    <input
+      type="checkbox"
+      checked={selectedQuestions.includes(index)}
+      onChange={() =>
+        toggleQuestionSelection(index)
+      }
+    />
+
+    <span className="text-sm text-gray-600">
+
+      Select Question
+
+    </span>
+
+  </label>
+
+  <div className="flex gap-2">
+
+    <button
+      onClick={() =>
+        editGeneratedQuestion(question)
+      }
+      className="rounded border px-3 py-1 text-sm hover:bg-gray-50"
+    >
+
+      Edit
+
+    </button>
+
+    <button
+      onClick={() =>
+        removeGeneratedQuestion(index)
+      }
+      className="rounded border px-3 py-1 text-sm text-red-600 hover:bg-red-50"
+    >
+
+      Remove
+
+    </button>
+
+  </div>
+
+</div>
 
           <div className="mb-3">
 

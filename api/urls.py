@@ -15,6 +15,9 @@ from api.views.question_api import (
     create_question,
     generate_topic_questions,
     bulk_create_questions,
+    toggle_question_status,
+    delete_question,
+    edit_question,
 )
 
 from api.views.course_api import (
@@ -97,6 +100,21 @@ urlpatterns = [
         "topics/<int:topic_id>/bulk-create/",
         bulk_create_questions,
         name="bulk_create_questions",
+    ),
+    path(
+        "questions/<int:question_id>/toggle/",
+        toggle_question_status,
+        name="toggle_question_status",
+    ),
+    path(
+        "questions/<int:question_id>/delete/",
+        delete_question,
+        name="delete_question",
+    ),
+    path(
+        "questions/<int:question_id>/edit/",
+        edit_question,
+        name="edit_question",
     ),
             
 ]
