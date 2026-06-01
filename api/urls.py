@@ -36,6 +36,12 @@ from api.views.material_api import (
     upload_material,
     course_materials,
 )
+
+from api.views.student_api import (
+    get_student_quiz,
+    submit_student_quiz,
+    get_student_results,
+)
 urlpatterns = [
 
     path(
@@ -115,6 +121,25 @@ urlpatterns = [
         "questions/<int:question_id>/edit/",
         edit_question,
         name="edit_question",
+    ),
+    
+    # ====================================
+    # STUDENT QUIZ ENDPOINTS
+    # ====================================
+    path(
+        "topics/<int:topic_id>/quiz/",
+        get_student_quiz,
+        name="get_student_quiz",
+    ),
+    path(
+        "topics/<int:topic_id>/submit/",
+        submit_student_quiz,
+        name="submit_student_quiz",
+    ),
+    path(
+        "topics/<int:topic_id>/results/",
+        get_student_results,
+        name="get_student_results",
     ),
             
 ]
