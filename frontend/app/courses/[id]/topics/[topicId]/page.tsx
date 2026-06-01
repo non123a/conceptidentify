@@ -16,6 +16,13 @@ type Topic = {
   question_count: number;
 };
 
+type DiagnosticStatus = {
+  isCompleted: boolean;
+  totalResponses: number;
+  loading: boolean;
+  error: string | null;
+};
+
 export default function TopicPage() {
 
   const params = useParams();
@@ -26,6 +33,18 @@ export default function TopicPage() {
 
   const [loading, setLoading] =
     useState(true);
+
+  const [diagnosticStatus, setDiagnosticStatus] =
+    useState<DiagnosticStatus>({
+      isCompleted: false,
+      totalResponses: 0,
+      loading: true,
+      error: null,
+    });
+
+  // ====================================
+  // FETCH TOPIC DATA
+  // ====================================
 
   const fetchTopic = async () => {
 
@@ -54,13 +73,55 @@ export default function TopicPage() {
         setLoading(false);
 
     }
-    };
+  };
+
+  // ====================================
+  // CHECK DIAGNOSTIC QUIZ STATUS
+  // ====================================
+
+  const checkDiagnosticStatus = async () => {
+    try {
+      setDiagnosticStatus((prev) => ({
+        ...prev,
+        loading: true,
+        error: null,
+      }));
+
+      const response = await api.get(
+        `/topics/${params.topicId}/results/`
+      );
+
+      const totalResponses = response.data.total_responses || 0;
+      const isCompleted = totalResponses > 0;
+
+      setDiagnosticStatus({
+        isCompleted,
+        totalResponses,
+        loading: false,
+        error: null,
+      });
+    } catch (error: any) {
+      console.error("Error checking diagnostic status:", error);
+      // If error (e.g., not enrolled), still allow quiz
+      setDiagnosticStatus({
+        isCompleted: false,
+        totalResponses: 0,
+        loading: false,
+        error: null,
+      });
+    }
+  };
 
   useEffect(() => {
 
     void Promise.resolve().then(fetchTopic);
+    // Only check diagnostic status for students
+    if (user?.role === "student") {
+      void Promise.resolve().then(checkDiagnosticStatus);
+    }
 
-  }, []);
+  }, [params.topicId, user?.role]);
+
   if (loading) {
 
     return (
@@ -123,11 +184,37 @@ export default function TopicPage() {
 
           <div>
             <h2 className="text-2xl font-bold">
-              Topic Quiz
+              Diagnostic Quiz
             </h2>
             <p className="mt-3 text-gray-600">
-              Answer questions and review your results from this topic.
+              {diagnosticStatus.isCompleted
+                ? "You have completed the diagnostic quiz for this topic."
+                : "Answer questions to assess your understanding of this topic."}
             </p>
+
+            {/* QUIZ ACTIONS */}
+            <div className="mt-6 flex gap-3">
+              {!diagnosticStatus.isCompleted ? (
+                <Link
+                  href={`/courses/${params.id}/topics/${params.topicId}/quiz`}
+                  className="rounded-lg bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700"
+                >
+                  Start Diagnostic Quiz
+                </Link>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 rounded-lg bg-green-50 px-6 py-2 border border-green-200">
+                    <span className="text-green-700 font-semibold">✓ Completed</span>
+                  </div>
+                  <Link
+                    href={`/courses/${params.id}/topics/${params.topicId}/results`}
+                    className="rounded-lg border px-6 py-2 font-semibold hover:bg-gray-50"
+                  >
+                    View Results
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
 
         )}

@@ -5,7 +5,7 @@ from materials.models import MaterialChunk
 from materials.services.chunk_service import chunk_text
 from materials.services.pdf_service import extract_pdf_text
 from materials.services.embedding_service import generate_embedding
-from api.permissions import IsLecturer
+from api.permissions import IsLecturer, is_topic_owner
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -47,6 +47,12 @@ def upload_material(request):
         return Response({
             "error": "Topic not found"
         }, status=404)
+
+    if not is_topic_owner(request.user, topic):
+        return Response({
+            "success": False,
+            "error": "You are not the instructor for this course",
+        }, status=403)
 
     # material = Material.objects.create(
     #     topic=topic,

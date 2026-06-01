@@ -6,7 +6,11 @@ from rest_framework.decorators import (
 from rest_framework.permissions import (
     IsAuthenticated,
 )
-from api.permissions import IsLecturer
+from api.permissions import (
+    IsLecturer,
+    is_question_owner,
+    is_topic_owner,
+)
 
 from rest_framework.response import (
     Response,
@@ -30,8 +34,20 @@ from assessments.serializers import (
 @permission_classes([IsAuthenticated, IsLecturer])
 def topic_questions(request, topic_id):
 
+    topic = get_object_or_404(
+        Topic,
+        id=topic_id
+    )
+
+    if not is_topic_owner(request.user, topic):
+
+        return Response({
+            "success": False,
+            "error": "You are not the instructor for this course",
+        }, status=status.HTTP_403_FORBIDDEN)
+
     questions = Question.objects.filter(
-        topic_id=topic_id
+        topic=topic
     ).order_by("-created_at")
 
     serializer = QuestionSerializer(
@@ -49,6 +65,18 @@ def topic_questions(request, topic_id):
 @permission_classes([IsAuthenticated, IsLecturer])
 def create_question(request, topic_id):
 
+    topic = get_object_or_404(
+        Topic,
+        id=topic_id
+    )
+
+    if not is_topic_owner(request.user, topic):
+
+        return Response({
+            "success": False,
+            "error": "You are not the instructor for this course",
+        }, status=status.HTTP_403_FORBIDDEN)
+
     text = request.data.get("text")
 
     question_type = request.data.get(
@@ -61,7 +89,7 @@ def create_question(request, topic_id):
     )
 
     question = Question.objects.create(
-        topic_id=topic_id,
+        topic=topic,
         text=text,
         question_type=question_type,
         correct_answer=correct_answer,
@@ -113,6 +141,13 @@ def generate_topic_questions(request, topic_id):
         Topic,
         id=topic_id
     )
+
+    if not is_topic_owner(request.user, topic):
+
+        return Response({
+            "success": False,
+            "error": "You are not the instructor for this course",
+        }, status=status.HTTP_403_FORBIDDEN)
 
     materials = Material.objects.filter(
         topic=topic
@@ -174,6 +209,13 @@ def bulk_create_questions(request, topic_id):
         Topic,
         id=topic_id
     )
+
+    if not is_topic_owner(request.user, topic):
+
+        return Response({
+            "success": False,
+            "error": "You are not the instructor for this course",
+        }, status=status.HTTP_403_FORBIDDEN)
 
     questions = request.data.get(
         "questions",
@@ -240,6 +282,13 @@ def toggle_question_status(request, question_id):
         id=question_id
     )
 
+    if not is_question_owner(request.user, question):
+
+        return Response({
+            "success": False,
+            "error": "You are not the instructor for this course",
+        }, status=status.HTTP_403_FORBIDDEN)
+
     question.is_approved = not question.is_approved
     question.save()
 
@@ -258,6 +307,13 @@ def delete_question(request, question_id):
         id=question_id
     )
 
+    if not is_question_owner(request.user, question):
+
+        return Response({
+            "success": False,
+            "error": "You are not the instructor for this course",
+        }, status=status.HTTP_403_FORBIDDEN)
+
     question.delete()
 
     return Response({
@@ -274,6 +330,13 @@ def edit_question(request, question_id):
         Question,
         id=question_id
     )
+
+    if not is_question_owner(request.user, question):
+
+        return Response({
+            "success": False,
+            "error": "You are not the instructor for this course",
+        }, status=status.HTTP_403_FORBIDDEN)
 
     question.text = request.data.get(
         "text",

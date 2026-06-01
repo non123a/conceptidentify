@@ -6,7 +6,7 @@ from rest_framework.decorators import (
 from rest_framework.permissions import (
     IsAuthenticated,
 )
-from api.permissions import IsLecturer
+from api.permissions import IsLecturer, is_course_owner
 
 from rest_framework.response import Response
 
@@ -67,6 +67,13 @@ def create_topic(request, course_id):
             "success": False,
             "message": "Course not found",
         }, status=404)
+
+    if not is_course_owner(request.user, course):
+
+        return Response({
+            "success": False,
+            "error": "You are not the instructor for this course",
+        }, status=403)
 
     topic = Topic.objects.create(
         course=course,
