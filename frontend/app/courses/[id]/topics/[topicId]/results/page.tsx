@@ -36,6 +36,12 @@ type ResultsData = {
   results: StudentResult[];
 };
 
+type ApiError = {
+  response?: {
+    status?: number;
+  };
+};
+
 // ====================================
 // PAGE COMPONENT
 // ====================================
@@ -69,11 +75,12 @@ export default function ResultsPage() {
       } else {
         setError("Failed to load results");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
       console.error("Error loading results:", err);
-      if (err.response?.status === 403) {
+      if (apiError.response?.status === 403) {
         setError("Not enrolled in this course");
-      } else if (err.response?.status === 404) {
+      } else if (apiError.response?.status === 404) {
         setError("Results not found");
       } else {
         setError("Error loading results");
@@ -84,7 +91,7 @@ export default function ResultsPage() {
   };
 
   useEffect(() => {
-    fetchResults();
+    void Promise.resolve().then(fetchResults);
   }, [params.topicId]);
 
   // ====================================
@@ -248,7 +255,7 @@ export default function ResultsPage() {
           href={`/courses/${params.id}/topics/${params.topicId}/quiz`}
           className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 text-center"
         >
-          Retake Quiz
+          Diagnostic Quiz
         </Link>
         <Link
           href={`/courses/${params.id}/topics/${params.topicId}`}

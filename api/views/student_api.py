@@ -61,10 +61,17 @@ def get_student_quiz(request, topic_id):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # ✅ Get approved questions only
+        answered_question_ids = StudentResponse.objects.filter(
+            student=request.user,
+            question__topic=topic
+        ).values_list("question_id", flat=True)
+
+        # ✅ Get approved questions only if this student has not answered them
         questions = Question.objects.filter(
             topic=topic,
             is_approved=True
+        ).exclude(
+            id__in=answered_question_ids
         ).order_by("id")
         
         topic_serializer = TopicSerializer(topic)
@@ -123,17 +130,24 @@ def submit_student_quiz(request, topic_id):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # ✅ Get approved questions
+        answered_question_ids = StudentResponse.objects.filter(
+            student=request.user,
+            question__topic=topic
+        ).values_list("question_id", flat=True)
+
+        # ✅ Get approved unanswered questions only
         questions = Question.objects.filter(
             topic=topic,
             is_approved=True
+        ).exclude(
+            id__in=answered_question_ids
         ).order_by("id")
         
         if not questions.exists():
             return Response(
                 {
                     "success": False,
-                    "error": "No questions available for this topic"
+                    "error": "No unanswered diagnostic questions available for this topic"
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
@@ -165,7 +179,8 @@ def submit_student_quiz(request, topic_id):
         results, is_retry = handle_topic_submission(
             student=request.user,
             questions=questions,
-            post_data=post_data
+            post_data=post_data,
+            persist=True
         )
         
         return Response({
@@ -175,6 +190,148 @@ def submit_student_quiz(request, topic_id):
             "results": results,
         })
     
+    except Exception as e:
+        return Response(
+            {
+                "success": False,
+                "error": str(e)
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsStudent])
+def get_practice_questions(request, topic_id):
+    """
+    GET /api/topics/<topic_id>/practice/
+
+    Return approved questions this student has already answered diagnostically.
+    Practice does not affect analytics.
+    """
+    try:
+        topic = get_object_or_404(Topic, id=topic_id)
+
+        enrollment = Enrollment.objects.filter(
+            student=request.user,
+            course=topic.course
+        ).first()
+        if not enrollment:
+            return Response(
+                {
+                    "success": False,
+                    "error": "Not enrolled in this course"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        answered_question_ids = StudentResponse.objects.filter(
+            student=request.user,
+            question__topic=topic
+        ).values_list("question_id", flat=True)
+
+        questions = Question.objects.filter(
+            topic=topic,
+            is_approved=True,
+            id__in=answered_question_ids
+        ).order_by("id")
+
+        return Response({
+            "success": True,
+            "topic": TopicSerializer(topic).data,
+            "questions": QuestionForStudentSerializer(
+                questions,
+                many=True
+            ).data,
+        })
+
+    except Exception as e:
+        return Response(
+            {
+                "success": False,
+                "error": str(e)
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated, IsStudent])
+def submit_practice_questions(request, topic_id):
+    """
+    POST /api/topics/<topic_id>/practice/submit/
+
+    Evaluate already answered questions without creating/updating StudentResponse.
+    """
+    try:
+        topic = get_object_or_404(Topic, id=topic_id)
+
+        enrollment = Enrollment.objects.filter(
+            student=request.user,
+            course=topic.course
+        ).first()
+        if not enrollment:
+            return Response(
+                {
+                    "success": False,
+                    "error": "Not enrolled in this course"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        answered_question_ids = StudentResponse.objects.filter(
+            student=request.user,
+            question__topic=topic
+        ).values_list("question_id", flat=True)
+
+        questions = Question.objects.filter(
+            topic=topic,
+            is_approved=True,
+            id__in=answered_question_ids
+        ).order_by("id")
+
+        if not questions.exists():
+            return Response(
+                {
+                    "success": False,
+                    "error": "No practice questions available for this topic"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        data = request.data or {}
+        answers = data.get("answers", {})
+
+        if not answers:
+            return Response(
+                {
+                    "success": False,
+                    "error": "No answers provided"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        post_data = {}
+        for question_id, answer_text in answers.items():
+            try:
+                q_id = int(question_id)
+                post_data[f"question_{q_id}"] = answer_text
+            except (ValueError, TypeError):
+                continue
+
+        results, _ = handle_topic_submission(
+            student=request.user,
+            questions=questions,
+            post_data=post_data,
+            persist=False
+        )
+
+        return Response({
+            "success": True,
+            "message": "Practice submitted successfully",
+            "results": results,
+        })
+
     except Exception as e:
         return Response(
             {

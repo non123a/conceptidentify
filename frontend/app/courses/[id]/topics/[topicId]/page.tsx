@@ -17,8 +17,9 @@ type Topic = {
 };
 
 type DiagnosticStatus = {
-  isCompleted: boolean;
-  totalResponses: number;
+  hasAvailableQuestions: boolean;
+  questionCount: number;
+  practiceCount: number;
   loading: boolean;
   error: string | null;
 };
@@ -36,8 +37,9 @@ export default function TopicPage() {
 
   const [diagnosticStatus, setDiagnosticStatus] =
     useState<DiagnosticStatus>({
-      isCompleted: false,
-      totalResponses: 0,
+      hasAvailableQuestions: false,
+      questionCount: 0,
+      practiceCount: 0,
       loading: true,
       error: null,
     });
@@ -76,7 +78,7 @@ export default function TopicPage() {
   };
 
   // ====================================
-  // CHECK DIAGNOSTIC QUIZ STATUS
+  // CHECK DIAGNOSTIC AND PRACTICE STATUS
   // ====================================
 
   const checkDiagnosticStatus = async () => {
@@ -87,25 +89,37 @@ export default function TopicPage() {
         error: null,
       }));
 
-      const response = await api.get(
-        `/topics/${params.topicId}/results/`
-      );
+      const [
+        diagnosticResponse,
+        practiceResponse,
+      ] = await Promise.all([
+        api.get(
+          `/topics/${params.topicId}/quiz/`
+        ),
+        api.get(
+          `/topics/${params.topicId}/practice/`
+        ),
+      ]);
 
-      const totalResponses = response.data.total_responses || 0;
-      const isCompleted = totalResponses > 0;
+      const questionCount =
+        diagnosticResponse.data.questions?.length || 0;
+      const practiceCount =
+        practiceResponse.data.questions?.length || 0;
 
       setDiagnosticStatus({
-        isCompleted,
-        totalResponses,
+        hasAvailableQuestions: questionCount > 0,
+        questionCount,
+        practiceCount,
         loading: false,
         error: null,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error checking diagnostic status:", error);
       // If error (e.g., not enrolled), still allow quiz
       setDiagnosticStatus({
-        isCompleted: false,
-        totalResponses: 0,
+        hasAvailableQuestions: false,
+        questionCount: 0,
+        practiceCount: 0,
         loading: false,
         error: null,
       });
@@ -184,36 +198,44 @@ export default function TopicPage() {
 
           <div>
             <h2 className="text-2xl font-bold">
-              Diagnostic Quiz
+              Student Questions
             </h2>
             <p className="mt-3 text-gray-600">
-              {diagnosticStatus.isCompleted
-                ? "You have completed the diagnostic quiz for this topic."
-                : "Answer questions to assess your understanding of this topic."}
+              {diagnosticStatus.hasAvailableQuestions
+                ? "Diagnostic Quiz Available"
+                : "Diagnostic Quiz Completed"}
             </p>
 
-            {/* QUIZ ACTIONS */}
-            <div className="mt-6 flex gap-3">
-              {!diagnosticStatus.isCompleted ? (
+            <div className="mt-6 flex flex-wrap gap-3">
+              {diagnosticStatus.hasAvailableQuestions ? (
                 <Link
                   href={`/courses/${params.id}/topics/${params.topicId}/quiz`}
                   className="rounded-lg bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700"
                 >
-                  Start Diagnostic Quiz
+                  Diagnostic Quiz
                 </Link>
               ) : (
-                <>
-                  <div className="flex items-center gap-2 rounded-lg bg-green-50 px-6 py-2 border border-green-200">
-                    <span className="text-green-700 font-semibold">✓ Completed</span>
-                  </div>
-                  <Link
-                    href={`/courses/${params.id}/topics/${params.topicId}/results`}
-                    className="rounded-lg border px-6 py-2 font-semibold hover:bg-gray-50"
-                  >
-                    View Results
-                  </Link>
-                </>
+                <div className="flex items-center gap-2 rounded-lg bg-green-50 px-6 py-2 border border-green-200">
+                  <span className="text-green-700 font-semibold">Completed</span>
+                </div>
               )}
+
+              <Link
+                href={`/courses/${params.id}/topics/${params.topicId}/practice`}
+                className="rounded-lg border px-6 py-2 font-semibold hover:bg-gray-50"
+              >
+                Practice Questions
+                {diagnosticStatus.practiceCount > 0
+                  ? ` (${diagnosticStatus.practiceCount})`
+                  : ""}
+              </Link>
+
+              <Link
+                href={`/courses/${params.id}/topics/${params.topicId}/results`}
+                className="rounded-lg border px-6 py-2 font-semibold hover:bg-gray-50"
+              >
+                View Diagnostic History
+              </Link>
             </div>
           </div>
 

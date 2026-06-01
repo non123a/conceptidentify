@@ -41,6 +41,8 @@ from api.views.student_api import (
     get_student_quiz,
     submit_student_quiz,
     get_student_results,
+    get_practice_questions,
+    submit_practice_questions,
 )
 
 from api.views.analytics_api import (
@@ -146,6 +148,16 @@ urlpatterns = [
         "topics/<int:topic_id>/results/",
         get_student_results,
         name="get_student_results",
+    ),
+    path(
+        "topics/<int:topic_id>/practice/",
+        get_practice_questions,
+        name="get_practice_questions",
+    ),
+    path(
+        "topics/<int:topic_id>/practice/submit/",
+        submit_practice_questions,
+        name="submit_practice_questions",
     ),
     
     # ====================================

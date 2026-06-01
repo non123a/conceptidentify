@@ -3,12 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import api from "@/lib/api";
-import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-
-// ====================================
-// TYPES
-// ====================================
 
 type Choice = {
   id: number;
@@ -30,13 +25,13 @@ type Topic = {
   question_count: number;
 };
 
-type QuizData = {
+type PracticeData = {
   success: boolean;
   topic: Topic;
   questions: Question[];
 };
 
-type SubmissionResult = {
+type PracticeResult = {
   question: string;
   answer: string;
   score: number | null;
@@ -54,55 +49,40 @@ type ApiError = {
   };
 };
 
-// ====================================
-// PAGE COMPONENT
-// ====================================
-
-export default function QuizPage() {
+export default function PracticePage() {
   const params = useParams();
-  useAuth();
 
-  // ====================================
-  // STATE
-  // ====================================
-
-  const [quizData, setQuizData] = useState<QuizData | null>(null);
+  const [practiceData, setPracticeData] =
+    useState<PracticeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [submittedResults, setSubmittedResults] =
-    useState<SubmissionResult[] | null>(null);
+  const [answers, setAnswers] =
+    useState<Record<string, string>>({});
+  const [results, setResults] =
+    useState<PracticeResult[] | null>(null);
 
-  // Store answers: { [questionId]: answer }
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-
-  // ====================================
-  // FETCH QUIZ
-  // ====================================
-
-  const fetchQuiz = async () => {
+  const fetchPractice = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await api.get<QuizData>(
-        `/topics/${params.topicId}/quiz/`
+      const response = await api.get<PracticeData>(
+        `/topics/${params.topicId}/practice/`
       );
 
       if (response.data.success) {
-        setQuizData(response.data);
+        setPracticeData(response.data);
       } else {
-        setError("Failed to load quiz");
+        setError("Failed to load practice questions");
       }
     } catch (err: unknown) {
       const apiError = err as ApiError;
-      console.error("Error loading quiz:", err);
+      console.error("Error loading practice questions:", err);
       if (apiError.response?.status === 403) {
         setError("Not enrolled in this course");
-      } else if (apiError.response?.status === 404) {
-        setError("Quiz not found");
       } else {
-        setError("Error loading quiz");
+        setError("Error loading practice questions");
       }
     } finally {
       setLoading(false);
@@ -110,12 +90,8 @@ export default function QuizPage() {
   };
 
   useEffect(() => {
-    void Promise.resolve().then(fetchQuiz);
+    void Promise.resolve().then(fetchPractice);
   }, [params.topicId]);
-
-  // ====================================
-  // HANDLE ANSWER CHANGE
-  // ====================================
 
   const handleAnswerChange = (
     questionId: number,
@@ -127,69 +103,59 @@ export default function QuizPage() {
     }));
   };
 
-  // ====================================
-  // SUBMIT QUIZ
-  // ====================================
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!quizData) {
-      setError("Quiz data not loaded");
-      return;
-    }
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     try {
       setSubmitting(true);
       setError(null);
 
-      // Build payload
-      const payload = {
-        answers: answers,
-      };
-
       const response = await api.post(
-        `/topics/${params.topicId}/submit/`,
-        payload
+        `/topics/${params.topicId}/practice/submit/`,
+        {
+          answers,
+        }
       );
 
       if (response.data.success) {
-        setSubmittedResults(response.data.results || []);
+        setResults(response.data.results || []);
       } else {
-        setError(response.data.error || "Failed to submit quiz");
+        setError(response.data.error || "Failed to submit practice");
       }
     } catch (err: unknown) {
       const apiError = err as ApiError;
-      console.error("Error submitting quiz:", err);
-      if (apiError.response?.status === 403) {
-        setError("Not enrolled in this course");
-      } else if (apiError.response?.status === 400) {
-        setError(apiError.response.data?.error || "Invalid submission");
-      } else {
-        setError("Error submitting quiz");
-      }
+      console.error("Error submitting practice:", err);
+      setError(
+        apiError.response?.data?.error || "Error submitting practice"
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
-  // ====================================
-  // RENDER: LOADING
-  // ====================================
+  const formatScore = (result: PracticeResult) => {
+    if (result.score === null || result.score === undefined) {
+      return "Pending";
+    }
+
+    if (result.type === "mcq") {
+      return `${(result.score * 100).toFixed(1)}%`;
+    }
+
+    return `${result.score.toFixed(1)}%`;
+  };
 
   if (loading) {
     return (
       <div className="p-10">
-        <p className="text-gray-600">Loading quiz...</p>
+        <p className="text-gray-600">
+          Loading practice questions...
+        </p>
       </div>
     );
   }
 
-  // ====================================
-  // RENDER: ERROR
-  // ====================================
-
-  if (error && !quizData) {
+  if (error && !practiceData) {
     return (
       <div className="p-10">
         <p className="text-red-500 mb-4">{error}</p>
@@ -203,47 +169,37 @@ export default function QuizPage() {
     );
   }
 
-  if (!quizData) {
+  if (!practiceData) {
     return (
-      <div className="p-10 text-red-500">Quiz not found</div>
+      <div className="p-10 text-red-500">
+        Practice questions not found
+      </div>
     );
   }
 
-  const { topic, questions } = quizData;
+  const { topic, questions } = practiceData;
 
-  const formatScore = (result: SubmissionResult) => {
-    if (result.score === null || result.score === undefined) {
-      return "Pending";
-    }
-
-    if (result.type === "mcq") {
-      return `${(result.score * 100).toFixed(1)}%`;
-    }
-
-    return `${result.score.toFixed(1)}%`;
-  };
-
-  if (submittedResults) {
+  if (results) {
     return (
       <div className="p-10 max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">
-            {topic.name} - Diagnostic Results
+            {topic.name} - Practice Results
           </h1>
           <p className="text-gray-600">
-            Current submission results
+            Temporary practice feedback
           </p>
         </div>
 
-        {submittedResults.length === 0 ? (
+        {results.length === 0 ? (
           <div className="p-6 bg-gray-50 rounded-lg border">
             <p className="text-gray-600">
-              No submitted answers were evaluated.
+              No practice answers were evaluated.
             </p>
           </div>
         ) : (
           <div className="space-y-6">
-            {submittedResults.map((result, index) => (
+            {results.map((result, index) => (
               <div
                 key={`${result.question}-${index}`}
                 className="border rounded-lg p-6 bg-white shadow-sm"
@@ -286,17 +242,21 @@ export default function QuizPage() {
         )}
 
         <div className="mt-10 flex gap-4">
+          <button
+            type="button"
+            onClick={() => {
+              setResults(null);
+              setAnswers({});
+            }}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+          >
+            Practice Again
+          </button>
           <Link
             href={`/courses/${params.id}/topics/${params.topicId}`}
             className="px-6 py-3 border rounded-lg font-semibold hover:bg-gray-50"
           >
             Back to Topic
-          </Link>
-          <Link
-            href={`/courses/${params.id}/topics/${params.topicId}/results`}
-            className="px-6 py-3 border rounded-lg font-semibold hover:bg-gray-50"
-          >
-            View Diagnostic History
           </Link>
         </div>
       </div>
@@ -307,11 +267,11 @@ export default function QuizPage() {
     return (
       <div className="p-10 max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-6">
-          {topic.name} - Diagnostic Quiz
+          {topic.name} - Practice Questions
         </h1>
         <div className="p-6 bg-gray-50 rounded-lg border">
           <p className="text-gray-600 mb-6">
-            No unanswered diagnostic questions are available.
+            No practice questions are available yet.
           </p>
           <Link
             href={`/courses/${params.id}/topics/${params.topicId}`}
@@ -324,30 +284,23 @@ export default function QuizPage() {
     );
   }
 
-  // ====================================
-  // RENDER: QUIZ FORM
-  // ====================================
-
   return (
     <div className="p-10 max-w-4xl mx-auto">
-      {/* HEADER */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">
-          {topic.name}
+          {topic.name} - Practice Questions
         </h1>
         <p className="text-gray-600">
           Total Questions: {questions.length}
         </p>
       </div>
 
-      {/* ERROR ALERT */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded text-red-700">
           {error}
         </div>
       )}
 
-      {/* QUIZ FORM */}
       <form onSubmit={handleSubmit}>
         <div className="space-y-8">
           {questions.map((question, index) => (
@@ -355,7 +308,6 @@ export default function QuizPage() {
               key={question.id}
               className="border rounded-lg p-6 bg-white shadow-sm"
             >
-              {/* QUESTION NUMBER & TEXT */}
               <div className="mb-4">
                 <p className="text-sm text-gray-500">
                   Question {index + 1}
@@ -365,24 +317,20 @@ export default function QuizPage() {
                 </p>
               </div>
 
-              {/* OPEN-ENDED QUESTION */}
               {question.question_type === "open" && (
-                <div>
-                  <textarea
-                    value={answers[question.id.toString()] || ""}
-                    onChange={(e) =>
-                      handleAnswerChange(
-                        question.id,
-                        e.target.value
-                      )
-                    }
-                    placeholder="Enter your answer here..."
-                    className="w-full h-32 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                <textarea
+                  value={answers[question.id.toString()] || ""}
+                  onChange={(event) =>
+                    handleAnswerChange(
+                      question.id,
+                      event.target.value
+                    )
+                  }
+                  placeholder="Enter your answer here..."
+                  className="w-full h-32 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               )}
 
-              {/* MCQ QUESTION */}
               {question.question_type === "mcq" && (
                 <div className="space-y-3">
                   {question.choices.map((choice) => (
@@ -398,10 +346,10 @@ export default function QuizPage() {
                           answers[question.id.toString()] ===
                           choice.id.toString()
                         }
-                        onChange={(e) =>
+                        onChange={(event) =>
                           handleAnswerChange(
                             question.id,
-                            e.target.value
+                            event.target.value
                           )
                         }
                         className="mr-3"
@@ -415,14 +363,13 @@ export default function QuizPage() {
           ))}
         </div>
 
-        {/* SUBMIT BUTTON */}
         <div className="mt-10 flex gap-4">
           <button
             type="submit"
             disabled={submitting}
             className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {submitting ? "Submitting..." : "Submit Quiz"}
+            {submitting ? "Submitting..." : "Submit Practice"}
           </button>
 
           <Link
