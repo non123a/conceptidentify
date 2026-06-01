@@ -50,7 +50,9 @@ def handle_topic_submission(student, questions, post_data):
                 ai_feedback = ""  # 0 or 1
 
             else:
-                print("🔥 ENTER OPEN AI BLOCK for:", q.text)
+                # =====================
+                # 🔥 OPEN-ENDED (AI)
+                # =====================
                 # Check for cached evaluation (any student with same question and answer)
                 cached_response = StudentResponse.objects.filter(
                     question=q,
@@ -63,16 +65,14 @@ def handle_topic_submission(student, questions, post_data):
                     ai_feedback = cached_response.feedback
                     display_score = round(ai_score, 2)
                     ai_pending = False
-                    print("🔥 USING CACHED RESULT for:", q.text)
                 else:
                     # Need to evaluate
                     ai_score = None
                     ai_feedback = "Evaluating..."
                     display_score = None
                     ai_pending = True
-                    print("🔥 CALLING AI NOW for:", q.text)
                 
-                # Always create/update the student's response record
+                # ✅ FIRST ATTEMPT ONLY: Create StudentResponse only if this is first attempt
                 if not existing:
                     response_obj = StudentResponse.objects.create(
                         student=student,
@@ -82,9 +82,8 @@ def handle_topic_submission(student, questions, post_data):
                         feedback=ai_feedback
                     )
                 else:
-                    existing.score = ai_score / 100 if ai_score is not None else 0
-                    existing.feedback = ai_feedback
-                    existing.save()
+                    # ✅ RETRY: Set is_retry flag, but DO NOT modify StudentResponse
+                    is_retry = True
                     response_obj = existing
                 
                 # If we need to evaluate, do it now
@@ -108,8 +107,6 @@ def handle_topic_submission(student, questions, post_data):
 
                     
                     if ai_score is not None:
-                        response_obj.score = ai_score / 100
-                        response_obj.feedback = ai_feedback
                         display_score = round(ai_score, 2)
                         ai_pending = False
                     else:
@@ -117,7 +114,11 @@ def handle_topic_submission(student, questions, post_data):
                         display_score = None
                         ai_feedback = "Evaluating..."
                     
-                    response_obj.save()
+                    # ✅ ONLY save if first attempt (not retry)
+                    if not existing:
+                        response_obj.score = ai_score / 100
+                        response_obj.feedback = ai_feedback
+                        response_obj.save()
             temp_results.append({
                 "question": q.text,
                 "answer": display_answer,

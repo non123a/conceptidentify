@@ -42,6 +42,12 @@ from api.views.student_api import (
     submit_student_quiz,
     get_student_results,
 )
+
+from api.views.analytics_api import (
+    student_analytics,
+    lecturer_analytics,
+    topic_analytics,
+)
 urlpatterns = [
 
     path(
@@ -140,6 +146,25 @@ urlpatterns = [
         "topics/<int:topic_id>/results/",
         get_student_results,
         name="get_student_results",
+    ),
+    
+    # ====================================
+    # ANALYTICS ENDPOINTS
+    # ====================================
+    path(
+        "courses/<int:course_id>/student-analytics/",
+        student_analytics,
+        name="student_analytics",
+    ),
+    path(
+        "courses/<int:course_id>/lecturer-analytics/",
+        lecturer_analytics,
+        name="lecturer_analytics",
+    ),
+    path(
+        "topics/<int:topic_id>/analytics/",
+        topic_analytics,
+        name="topic_analytics",
     ),
             
 ]
