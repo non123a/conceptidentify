@@ -24,6 +24,7 @@ from api.views.course_api import (
     my_courses,
     course_detail,
     create_course,
+    join_course,
 )
 from api.views.material_api import (
     upload_material,
@@ -89,6 +90,11 @@ urlpatterns = [
         "courses/<int:course_id>/topics/create/",
         create_topic,
         name="create_topic",
+    ),
+    path(
+        "courses/join/",
+        join_course,
+        name="join_course",
     ),
     path(
         "topics/<int:topic_id>/",

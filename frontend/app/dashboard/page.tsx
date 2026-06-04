@@ -22,7 +22,11 @@ export default function DashboardPage() {
 
 const [showCreateModal, setShowCreateModal] =
   useState(false);
+const [showJoinModal, setShowJoinModal] =
+  useState(false);
 
+const [joinCode, setJoinCode] =
+  useState("");
 const [courseName, setCourseName] =
   useState("");
 
@@ -97,6 +101,41 @@ const [courseDescription, setCourseDescription] =
     );
   }
 };
+const joinCourse = async () => {
+
+  if (!joinCode.trim()) {
+
+    alert(
+      "Join code is required"
+    );
+
+    return;
+  }
+
+  try {
+
+    await api.post(
+      "/courses/join/",
+      {
+        join_code: joinCode,
+      }
+    );
+
+    setShowJoinModal(false);
+
+    setJoinCode("");
+
+    fetchCourses();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Failed to join course"
+    );
+  }
+};
   if (loading) {
     return (
       <div className="p-10">
@@ -145,11 +184,7 @@ const [courseDescription, setCourseDescription] =
       </div>
       <div className="mt-10">
 
-        <div className="mb-6 flex items-center justify-between">
-
-          <h2 className="text-2xl font-bold">
-            My Courses
-          </h2>
+        <div className="flex gap-3">
 
           {user.role === "lecturer" && (
 
@@ -160,6 +195,19 @@ const [courseDescription, setCourseDescription] =
               className="rounded bg-black px-4 py-2 text-white"
             >
               + Create Course
+            </button>
+
+          )}
+
+          {user.role === "student" && (
+
+            <button
+              onClick={() =>
+                setShowJoinModal(true)
+              }
+              className="rounded bg-black px-4 py-2 text-white"
+            >
+              + Join Course
             </button>
 
           )}
@@ -253,6 +301,51 @@ const [courseDescription, setCourseDescription] =
           className="rounded bg-black px-4 py-2 text-white"
         >
           Create
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+)
+}
+{showJoinModal && (
+
+  <div className="fixed inset-0 flex items-center justify-center bg-black/50">
+
+    <div className="w-full max-w-md rounded bg-white p-6">
+
+      <h2 className="mb-4 text-xl font-bold">
+        Join Course
+      </h2>
+
+      <input
+        placeholder="Join Code"
+        className="mb-4 w-full rounded border p-3"
+        value={joinCode}
+        onChange={(e) =>
+          setJoinCode(e.target.value)
+        }
+      />
+
+      <div className="flex justify-end gap-3">
+
+        <button
+          onClick={() =>
+            setShowJoinModal(false)
+          }
+          className="rounded border px-4 py-2"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={joinCourse}
+          className="rounded bg-black px-4 py-2 text-white"
+        >
+          Join
         </button>
 
       </div>

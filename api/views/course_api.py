@@ -184,3 +184,75 @@ def create_course(request):
         },
         status=status.HTTP_201_CREATED
     )
+
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def join_course(request):
+
+    if request.user.role != "student":
+
+        return Response(
+            {
+                "success": False,
+                "message": "Students only."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    join_code = request.data.get(
+        "join_code"
+    )
+
+    if not join_code:
+
+        return Response(
+            {
+                "success": False,
+                "message": "Join code is required."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+
+        course = Course.objects.get(
+            join_code=join_code
+        )
+
+    except Course.DoesNotExist:
+
+        return Response(
+            {
+                "success": False,
+                "message": "Invalid join code."
+            },
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if Enrollment.objects.filter(
+        student=request.user,
+        course=course
+    ).exists():
+
+        return Response(
+            {
+                "success": False,
+                "message": "Already enrolled."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    Enrollment.objects.create(
+        student=request.user,
+        course=course
+    )
+
+    return Response(
+        {
+            "success": True,
+            "message": "Successfully joined course.",
+            "data": CourseSerializer(course).data
+        }
+    )
