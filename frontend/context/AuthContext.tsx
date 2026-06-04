@@ -18,13 +18,38 @@ type User = {
     last_name: string;
 };
 
+// type AuthContextType = {
+//   user: User | null;
+//   loading: boolean;
+//   login: (username: string, password: string) => Promise<boolean>;
+//   logout: () => void;
+// };
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+
+  login: (
+    username: string,
+    password: string
+  ) => Promise<boolean>;
+
+  register: (
+    data: {
+      username: string;
+      email: string;
+      first_name: string;
+      last_name: string;
+      role: string;
+      password: string;
+      confirm_password: string;
+    }
+  ) => Promise<{
+    success: boolean;
+    message: string;
+  }>;
+
   logout: () => void;
 };
-
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({
@@ -89,7 +114,39 @@ export function AuthProvider({
 
     }
     };
-  const logout = async () => {
+  const register = async (data: {
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  password: string;
+  confirm_password: string;
+}) => {
+
+  try {
+
+    const response = await api.post(
+      "/auth/register/",
+      data
+    );
+
+    return {
+      success: true,
+      message: response.data.message,
+    };
+
+  } catch (error: any) {
+
+    return {
+      success: false,
+      message:
+        error?.response?.data?.message ||
+        "Registration failed",
+    };
+  }
+};
+const logout = async () => {
 
     try {
       await api.post("/auth/logout/");
@@ -99,13 +156,16 @@ export function AuthProvider({
     setUser(null);
   };
 
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
         login,
+        register,
         logout,
+        
       }}
     >
       {children}
