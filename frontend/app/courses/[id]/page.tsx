@@ -43,7 +43,14 @@ export default function CourseDetailPage() {
 
   const [loading, setLoading] =
     useState(true);
+  const [showCreateTopicModal, setShowCreateTopicModal] =
+  useState(false);
 
+const [topicName, setTopicName] =
+  useState("");
+
+const [topicDescription, setTopicDescription] =
+  useState("");
   const fetchCourse = async () => {
 
     try {
@@ -83,7 +90,43 @@ export default function CourseDetailPage() {
 
         }
     };
+  const createTopic = async () => {
 
+  if (!topicName.trim()) {
+
+    alert(
+      "Topic name is required"
+    );
+
+    return;
+  }
+
+  try {
+
+    await api.post(
+      `/courses/${params.id}/topics/create/`,
+      {
+        name: topicName,
+        description: topicDescription,
+      }
+    );
+
+    setShowCreateTopicModal(false);
+
+    setTopicName("");
+    setTopicDescription("");
+
+    fetchCourse();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Failed to create topic"
+    );
+  }
+};
   useEffect(() => {
 
     void Promise.resolve().then(fetchCourse);
@@ -148,6 +191,19 @@ export default function CourseDetailPage() {
     <h2 className="text-3xl font-bold">
       Topics
     </h2>
+
+    {user?.role === "lecturer" && (
+
+      <button
+        onClick={() =>
+          setShowCreateTopicModal(true)
+        }
+        className="rounded bg-black px-4 py-2 text-white"
+      >
+        + Create Topic
+      </button>
+
+    )}
 
   </div>
 
@@ -243,7 +299,61 @@ export default function CourseDetailPage() {
   )}
 
 </div>
+{showCreateTopicModal && (
 
+  <div className="fixed inset-0 flex items-center justify-center bg-black/50">
+
+    <div className="w-full max-w-md rounded bg-white p-6">
+
+      <h2 className="mb-4 text-xl font-bold">
+        Create Topic
+      </h2>
+
+      <input
+        placeholder="Topic Name"
+        className="mb-3 w-full rounded border p-3"
+        value={topicName}
+        onChange={(e) =>
+          setTopicName(e.target.value)
+        }
+      />
+
+      <textarea
+        placeholder="Description"
+        className="mb-4 w-full rounded border p-3"
+        value={topicDescription}
+        onChange={(e) =>
+          setTopicDescription(
+            e.target.value
+          )
+        }
+      />
+
+      <div className="flex justify-end gap-3">
+
+        <button
+          onClick={() =>
+            setShowCreateTopicModal(false)
+          }
+          className="rounded border px-4 py-2"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={createTopic}
+          className="rounded bg-black px-4 py-2 text-white"
+        >
+          Create
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+)}
 </div>
   );
 }
