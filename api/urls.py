@@ -23,6 +23,7 @@ from api.views.question_api import (
 from api.views.course_api import (
     my_courses,
     course_detail,
+    create_course,
 )
 from api.views.material_api import (
     upload_material,
@@ -56,6 +57,11 @@ urlpatterns = [
         "courses/",
         my_courses,
         name="my_courses",
+    ),
+    path(
+        "courses/create/",
+        create_course,
+        name="create_course",
     ),
 
     path(

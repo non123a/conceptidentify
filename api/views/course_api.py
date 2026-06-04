@@ -18,6 +18,7 @@ from courses.serializers import (
     CourseSerializer,
 )
 
+from rest_framework import status
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -53,6 +54,30 @@ def my_courses(request):
     })
 
 
+# @api_view(["GET"])
+# @permission_classes([IsAuthenticated])
+# def course_detail(request, course_id):
+
+#     try:
+
+#         course = Course.objects.get(
+#             id=course_id
+#         )
+
+#     except Course.DoesNotExist:
+
+#         return Response({
+#             "success": False,
+#             "message": "Course not found",
+#         }, status=404)
+
+#     serializer = CourseSerializer(course)
+
+#     return Response({
+#         "success": True,
+#         "data": serializer.data,
+#     })
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def course_detail(request, course_id):
@@ -65,14 +90,97 @@ def course_detail(request, course_id):
 
     except Course.DoesNotExist:
 
-        return Response({
-            "success": False,
-            "message": "Course not found",
-        }, status=404)
+        return Response(
+            {
+                "success": False,
+                "message": "Course not found",
+            },
+            status=404
+        )
+
+    # Lecturer ownership check
+    if request.user.role == "lecturer":
+
+        if course.lecturer != request.user:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Access denied."
+                },
+                status=403
+            )
+
+    # Student enrollment check
+    else:
+
+        is_enrolled = Enrollment.objects.filter(
+            student=request.user,
+            course=course
+        ).exists()
+
+        if not is_enrolled:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "You are not enrolled in this course."
+                },
+                status=403
+            )
 
     serializer = CourseSerializer(course)
 
-    return Response({
-        "success": True,
-        "data": serializer.data,
-    })
+    return Response(
+        {
+            "success": True,
+            "data": serializer.data,
+        }
+    )
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def create_course(request):
+
+    if request.user.role != "lecturer":
+
+        return Response(
+            {
+                "success": False,
+                "message": "Lecturers only."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    name = request.data.get("name")
+    description = request.data.get(
+        "description",
+        ""
+    )
+
+    if not name:
+
+        return Response(
+            {
+                "success": False,
+                "message": "Course name is required."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    course = Course.objects.create(
+        name=name,
+        description=description,
+        lecturer=request.user,
+    )
+
+    serializer = CourseSerializer(course)
+
+    return Response(
+        {
+            "success": True,
+            "message": "Course created successfully.",
+            "data": serializer.data,
+        },
+        status=status.HTTP_201_CREATED
+    )

@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 
@@ -17,6 +18,16 @@ export default function DashboardPage() {
   const { user, loading } = useAuth();
   const [courses, setCourses] =
     useState<Course[]>([]);
+  const router = useRouter();
+
+const [showCreateModal, setShowCreateModal] =
+  useState(false);
+
+const [courseName, setCourseName] =
+  useState("");
+
+const [courseDescription, setCourseDescription] =
+  useState("");
   useEffect(() => {
 
     fetchCourses();
@@ -41,6 +52,51 @@ export default function DashboardPage() {
 
     }
   };
+  const createCourse = async () => {
+    if (!courseName.trim()) {
+
+      alert(
+        "Course name is required"
+      );
+
+      return;
+    } try {
+
+    const response = await api.post(
+      "/courses/create/",
+      {
+        name: courseName,
+        description: courseDescription,
+      }
+    );
+
+    // const courseId =
+    //   response.data.data.id;
+
+    // router.push(
+    //   `/courses/${courseId}`
+    // );
+    const courseId =
+      response.data.data.id;
+
+    setShowCreateModal(false);
+
+    setCourseName("");
+    setCourseDescription("");
+
+    router.push(
+      `/courses/${courseId}`
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Failed to create course"
+    );
+  }
+};
   if (loading) {
     return (
       <div className="p-10">
@@ -89,9 +145,26 @@ export default function DashboardPage() {
       </div>
       <div className="mt-10">
 
-        <h2 className="mb-6 text-2xl font-bold">
-          My Courses
-        </h2>
+        <div className="mb-6 flex items-center justify-between">
+
+          <h2 className="text-2xl font-bold">
+            My Courses
+          </h2>
+
+          {user.role === "lecturer" && (
+
+            <button
+              onClick={() =>
+                setShowCreateModal(true)
+              }
+              className="rounded bg-black px-4 py-2 text-white"
+            >
+              + Create Course
+            </button>
+
+          )}
+
+        </div>
 
         {courses.length === 0 ? (
 
@@ -134,7 +207,61 @@ export default function DashboardPage() {
         )}
 
       </div>
+{showCreateModal && (
 
+  <div className="fixed inset-0 flex items-center justify-center bg-black/50">
+
+    <div className="w-full max-w-md rounded bg-white p-6">
+
+      <h2 className="mb-4 text-xl font-bold">
+        Create Course
+      </h2>
+
+      <input
+        placeholder="Course Name"
+        className="mb-3 w-full rounded border p-3"
+        value={courseName}
+        onChange={(e) =>
+          setCourseName(e.target.value)
+        }
+      />
+
+      <textarea
+        placeholder="Description"
+        className="mb-4 w-full rounded border p-3"
+        value={courseDescription}
+        onChange={(e) =>
+          setCourseDescription(
+            e.target.value
+          )
+        }
+      />
+
+      <div className="flex justify-end gap-3">
+
+        <button
+          onClick={() =>
+            setShowCreateModal(false)
+          }
+          className="rounded border px-4 py-2"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={createCourse}
+          className="rounded bg-black px-4 py-2 text-white"
+        >
+          Create
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+)}
     </div>
     
   );
