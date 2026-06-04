@@ -7,7 +7,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
 from django.contrib.auth import authenticate
 
-from .serializers import LoginSerializer, UserSerializer
+# from .serializers import LoginSerializer, UserSerializer, RegisterSerializer
+from .serializers import (
+    LoginSerializer,
+    UserSerializer,
+    RegisterSerializer,
+)
 class LoginView(APIView):
 
     def post(self, request):
@@ -32,7 +37,17 @@ class LoginView(APIView):
                     },
                     status=status.HTTP_401_UNAUTHORIZED
                 )
-
+            if (
+                user.role == "lecturer"
+                and not user.is_approved
+            ):
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Lecturer not approved yet."
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
             refresh = RefreshToken.for_user(user)
 
             response = Response({
@@ -88,3 +103,38 @@ class MeView(APIView):
             "success": True,
             "data": serializer.data
         })
+    
+
+class RegisterView(APIView):
+
+    def post(self, request):
+
+        serializer = RegisterSerializer(
+            data=request.data
+        )
+
+        if serializer.is_valid():
+
+            user = serializer.save()
+
+            return Response(
+                {
+                    "success": True,
+                    "message": (
+                        "Account created. "
+                        "Waiting for approval."
+                        if user.role == "lecturer"
+                        else
+                        "Account created successfully."
+                    )
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            {
+                "success": False,
+                "errors": serializer.errors
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
