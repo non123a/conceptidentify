@@ -763,17 +763,17 @@ const toggleQuestionSelection = (
   <div className="xl:col-span-2">
     
     <div className="rounded-xl border p-6 shadow-sm">
+
+      <h2 className="mb-6 text-2xl font-bold">
+        Generated Questions
+      </h2>
+
       {generatedQuestions.length > 0 && (
 
           <div className="text-gray-500">
 
             <div className="mb-6 flex items-center justify-between">
 
-              <h2 className="text-2xl font-bold">
-
-                Generated Questions
-
-              </h2>
 
               <button
                 onClick={saveGeneratedQuestions}
