@@ -446,355 +446,19 @@ const toggleQuestionSelection = (
 
       </div>
 
-      <div className="rounded-xl border p-6 shadow-sm">
 
-        <h2 className="mb-6 text-2xl font-bold">
 
-          Manual Question Creation
 
-        </h2>
 
-        <div className="space-y-4">
 
-          <textarea
-            placeholder="Question text"
-            value={questionText}
-            onChange={(e) =>
-              setQuestionText(e.target.value)
-            }
-            className="w-full rounded border p-3"
-            rows={4}
-          />
 
-          <select
-            value={questionType}
-            onChange={(e) =>
-              setQuestionType(e.target.value)
-            }
-            className="w-full rounded border p-3"
-          >
+{/* -------------------------------------------------------------------------- */}
+<div className="grid gap-6 xl:grid-cols-4">
 
-            <option value="open">
-              Open Question
-            </option>
+  {/* LEFT PANEL */}
+  <div className="xl:col-span-1">
 
-            <option value="mcq">
-              Multiple Choice
-            </option>
-
-          </select>
-
-          {questionType === "open" && (
-
-            <textarea
-              placeholder="Reference answer"
-              value={correctAnswer}
-              onChange={(e) =>
-                setCorrectAnswer(
-                  e.target.value
-                )
-              }
-              className="w-full rounded border p-3"
-              rows={4}
-            />
-
-          )}
-
-          {questionType === "mcq" && (
-
-            <div className="space-y-3">
-
-              {options.map((option, index) => (
-
-                <div
-                  key={index}
-                  className="flex gap-3"
-                >
-
-                  <input
-                    type="radio"
-                    checked={
-                      correctOption === index
-                    }
-                    onChange={() =>
-                      setCorrectOption(index)
-                    }
-                  />
-
-                  <input
-                    type="text"
-                    placeholder={`Option ${index + 1}`}
-                    value={option}
-                    onChange={(e) => {
-
-                      const newOptions = [
-                        ...options
-                      ];
-
-                      newOptions[index] =
-                        e.target.value;
-
-                      setOptions(newOptions);
-                      setCorrectOption(0);
-                    }}
-                    className="w-full rounded border p-3"
-                  />
-
-                </div>
-
-              ))}
-
-            </div>
-
-          )}
-
-          <button
-            onClick={createQuestion}
-            disabled={creatingQuestion}
-            className="rounded bg-black px-6 py-3 text-white"
-          >
-
-            {creatingQuestion
-              ? "Creating..."
-              : "Create Question"}
-
-          </button>
-
-        </div>
-
-      </div>
-    <div className="mt-10 rounded-xl border p-6 shadow-sm">
-
-        <h2 className="mb-6 text-2xl font-bold">
-
-            AI Question Generation
-
-        </h2>
-
-        <div className="space-y-4">
-
-            <textarea
-            placeholder="Custom AI instruction..."
-            value={aiPrompt}
-            onChange={(e) =>
-                setAiPrompt(e.target.value)
-            }
-            className="w-full rounded border p-3"
-            rows={4}
-            />
-
-            <div className="grid gap-4 md:grid-cols-2">
-
-            <select
-                value={aiQuestionType}
-                onChange={(e) =>
-                setAiQuestionType(
-                    e.target.value
-                )
-                }
-                className="rounded border p-3"
-            >
-
-                <option value="mcq">
-                Multiple Choice
-                </option>
-
-                <option value="open">
-                Open Question
-                </option>
-
-            </select>
-
-            <input
-                type="number"
-                min={1}
-                max={10}
-                value={aiCount}
-                onChange={(e) =>
-                setAiCount(
-                    Number(e.target.value)
-                )
-                }
-                className="rounded border p-3"
-            />
-
-            </div>
-
-            <button
-            onClick={generateAiQuestions}
-            disabled={generatingAi}
-            className="rounded bg-black px-6 py-3 text-white"
-            >
-
-            {generatingAi
-                ? "Generating..."
-                : "Generate AI Questions"}
-
-            </button>
-
-        </div>
-
-        </div>
-        {generatedQuestions.length > 0 && (
-
-  <div className="mt-10 rounded-xl border p-6 shadow-sm">
-
-    <div className="mb-6 flex items-center justify-between">
-
-      <h2 className="text-2xl font-bold">
-
-        Generated Questions
-
-      </h2>
-
-      <button
-        onClick={saveGeneratedQuestions}
-        disabled={
-        savingGenerated ||
-        selectedQuestions.length === 0
-        }
-        className="rounded bg-green-600 px-5 py-3 text-white"
-        
-      >
-
-        {savingGenerated
-          ? "Saving..."
-          : "Approve & Save"
-          }
-        
-          
-
-      </button>
-
-    </div>
-
-    <div className="space-y-6">
-
-      {generatedQuestions.map((question, index) => (
-
-        <div
-          key={index}
-          className="rounded-lg border p-5"
-        >
-            <div className="mb-4 flex items-center justify-between">
-
-  <label className="flex items-center gap-2">
-
-    <input
-      type="checkbox"
-      checked={selectedQuestions.includes(index)}
-      onChange={() =>
-        toggleQuestionSelection(index)
-      }
-    />
-
-    <span className="text-sm text-gray-600">
-
-      Select Question
-
-    </span>
-
-  </label>
-
-  <div className="flex gap-2">
-
-    <button
-      onClick={() =>
-        editGeneratedQuestion(question)
-      }
-      className="rounded border px-3 py-1 text-sm hover:bg-gray-50"
-    >
-
-      Edit
-
-    </button>
-
-    <button
-      onClick={() =>
-        removeGeneratedQuestion(index)
-      }
-      className="rounded border px-3 py-1 text-sm text-red-600 hover:bg-red-50"
-    >
-
-      Remove
-
-    </button>
-
-  </div>
-
-</div>
-
-          <div className="mb-3">
-
-            <span className="rounded bg-gray-100 px-3 py-1 text-sm">
-
-              {question.type.toUpperCase()}
-
-            </span>
-
-          </div>
-
-          <h3 className="text-lg font-semibold">
-
-            {question.question}
-
-          </h3>
-
-          {question.type === "mcq" && (
-
-            <div className="mt-4 space-y-2">
-
-              {question.choices?.map((choice, i) => (
-
-                <div
-                  key={i}
-                  className={`rounded border p-3 ${
-                    choice === question.correct_answer
-                      ? "border-green-500 bg-green-50"
-                      : ""
-                  }`}
-                >
-
-                  {choice}
-
-                </div>
-
-              ))}
-
-            </div>
-
-          )}
-
-          {question.type === "open" && (
-
-            <div className="mt-4 rounded border bg-gray-50 p-4">
-
-              <p className="text-sm font-medium text-gray-500">
-
-                Reference Answer
-
-              </p>
-
-              <p className="mt-2 text-gray-700">
-
-                {question.reference_answer}
-
-              </p>
-
-            </div>
-
-          )}
-
-        </div>
-
-      ))}
-
-    </div>
-
-  </div>
-
-)}
-      <div className="mt-10">
+      <div>
 
         {/* <h2 className="mb-6 text-3xl font-bold">
           Materials
@@ -899,6 +563,374 @@ const toggleQuestionSelection = (
         )}
 
       </div>
+
+  </div>
+
+  {/* MIDDLE PANEL */}
+  <div className="xl:col-span-1">
+    <div className="rounded-xl border p-6 shadow-sm">
+
+        <h2 className="mb-6 text-2xl font-bold">
+
+            AI Question Generation
+
+        </h2>
+
+        <div className="space-y-4">
+
+            <textarea
+            placeholder="Custom AI instruction..."
+            value={aiPrompt}
+            onChange={(e) =>
+                setAiPrompt(e.target.value)
+            }
+            className="w-full rounded border p-3"
+            rows={4}
+            />
+
+            <div className="grid gap-4 md:grid-cols-2">
+
+            <select
+                value={aiQuestionType}
+                onChange={(e) =>
+                setAiQuestionType(
+                    e.target.value
+                )
+                }
+                className="rounded border p-3"
+            >
+
+                <option value="mcq">
+                Multiple Choice
+                </option>
+
+                <option value="open">
+                Open Question
+                </option>
+
+            </select>
+
+            <input
+                type="number"
+                min={1}
+                max={10}
+                value={aiCount}
+                onChange={(e) =>
+                setAiCount(
+                    Number(e.target.value)
+                )
+                }
+                className="rounded border p-3"
+            />
+
+            </div>
+
+            <button
+            onClick={generateAiQuestions}
+            disabled={generatingAi}
+            className="rounded bg-black px-6 py-3 text-white"
+            >
+
+            {generatingAi
+                ? "Generating..."
+                : "Generate AI Questions"}
+
+            </button>
+
+        </div>
+
+        </div>
+        <div className="mt-6 rounded-xl border p-6 shadow-sm">
+
+          <h2 className="mb-6 text-2xl font-bold">
+
+            Manual Question Creation
+
+          </h2>
+
+          <div className="space-y-4">
+
+            <textarea
+              placeholder="Question text"
+              value={questionText}
+              onChange={(e) =>
+                setQuestionText(e.target.value)
+              }
+              className="w-full rounded border p-3"
+              rows={4}
+            />
+
+            <select
+              value={questionType}
+              onChange={(e) =>
+                setQuestionType(e.target.value)
+              }
+              className="w-full rounded border p-3"
+            >
+
+              <option value="open">
+                Open Question
+              </option>
+
+              <option value="mcq">
+                Multiple Choice
+              </option>
+
+            </select>
+
+            {questionType === "open" && (
+
+              <textarea
+                placeholder="Reference answer"
+                value={correctAnswer}
+                onChange={(e) =>
+                  setCorrectAnswer(
+                    e.target.value
+                  )
+                }
+                className="w-full rounded border p-3"
+                rows={4}
+              />
+
+            )}
+
+            {questionType === "mcq" && (
+
+              <div className="space-y-3">
+
+                {options.map((option, index) => (
+
+                  <div
+                    key={index}
+                    className="flex gap-3"
+                  >
+
+                    <input
+                      type="radio"
+                      checked={
+                        correctOption === index
+                      }
+                      onChange={() =>
+                        setCorrectOption(index)
+                      }
+                    />
+
+                    <input
+                      type="text"
+                      placeholder={`Option ${index + 1}`}
+                      value={option}
+                      onChange={(e) => {
+
+                        const newOptions = [
+                          ...options
+                        ];
+
+                        newOptions[index] =
+                          e.target.value;
+
+                        setOptions(newOptions);
+                        setCorrectOption(0);
+                      }}
+                      className="w-full rounded border p-3"
+                    />
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            )}
+
+            <button
+              onClick={createQuestion}
+              disabled={creatingQuestion}
+              className="rounded bg-black px-6 py-3 text-white"
+            >
+
+              {creatingQuestion
+                ? "Creating..."
+                : "Create Question"}
+
+            </button>
+
+          </div>
+
+        </div>
+  </div>
+
+  {/* RIGHT PANEL */}
+  <div className="xl:col-span-2">
+    
+    <div className="rounded-xl border p-6 shadow-sm">
+      {generatedQuestions.length > 0 && (
+
+          <div className="text-gray-500">
+
+            <div className="mb-6 flex items-center justify-between">
+
+              <h2 className="text-2xl font-bold">
+
+                Generated Questions
+
+              </h2>
+
+              <button
+                onClick={saveGeneratedQuestions}
+                disabled={
+                savingGenerated ||
+                selectedQuestions.length === 0
+                }
+                className="rounded bg-green-600 px-5 py-3 text-white"
+                
+              >
+
+                {savingGenerated
+                  ? "Saving..."
+                  : "Approve & Save"
+                  }
+                
+                  
+
+              </button>
+
+            </div>
+
+            <div className="space-y-6">
+
+              {generatedQuestions.map((question, index) => (
+
+                <div
+                  key={index}
+                  className="rounded-lg border p-5"
+                >
+                    <div className="mb-4 flex items-center justify-between">
+
+          <label className="flex items-center gap-2">
+
+            <input
+              type="checkbox"
+              checked={selectedQuestions.includes(index)}
+              onChange={() =>
+                toggleQuestionSelection(index)
+              }
+            />
+
+            <span className="text-sm text-gray-600">
+
+              Select Question
+
+            </span>
+
+          </label>
+
+          <div className="flex gap-2">
+
+            <button
+              onClick={() =>
+                editGeneratedQuestion(question)
+              }
+              className="rounded border px-3 py-1 text-sm hover:bg-gray-50"
+            >
+
+              Edit
+
+            </button>
+
+            <button
+              onClick={() =>
+                removeGeneratedQuestion(index)
+              }
+              className="rounded border px-3 py-1 text-sm text-red-600 hover:bg-red-50"
+            >
+
+              Remove
+
+            </button>
+
+          </div>
+
+        </div>
+
+                  <div className="mb-3">
+
+                    <span className="rounded bg-gray-100 px-3 py-1 text-sm">
+
+                      {question.type.toUpperCase()}
+
+                    </span>
+
+                  </div>
+
+                  <h3 className="text-lg font-semibold">
+
+                    {question.question}
+
+                  </h3>
+
+                  {question.type === "mcq" && (
+
+                    <div className="mt-4 space-y-2">
+
+                      {question.choices?.map((choice, i) => (
+
+                        <div
+                          key={i}
+                          className={`rounded border p-3 ${
+                            choice === question.correct_answer
+                              ? "border-green-500 bg-green-50"
+                              : ""
+                          }`}
+                        >
+
+                          {choice}
+
+                        </div>
+
+                      ))}
+
+                    </div>
+
+                  )}
+
+                  {question.type === "open" && (
+
+                    <div className="mt-4 rounded border bg-gray-50 p-4">
+
+                      <p className="text-sm font-medium text-gray-500">
+
+                        Reference Answer
+
+                      </p>
+
+                      <p className="mt-2 text-gray-700">
+
+                        {question.reference_answer}
+
+                      </p>
+
+                    </div>
+
+                  )}
+
+                </div>
+
+              ))}
+
+            </div>
+
+          </div>
+
+      )}
+    </div>
+  </div>
+
+</div>
+
+
+
+
+
 
     </div>
   </RoleGuard>
