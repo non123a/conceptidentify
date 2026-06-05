@@ -181,17 +181,22 @@ const [topicDescription, setTopicDescription] =
       </p>
 
     </div>
-
+    
   </div>
 
 <div>
 
-  <div className="mb-6 flex items-center justify-between">
+  {/* <div className="mb-6 flex items-center justify-between">
 
     <h2 className="text-3xl font-bold">
       Topics
     </h2>
-
+    <Link
+        href={`/courses/${params.id}/analytics`}
+        className="rounded-lg bg-black px-4 py-2 text-white"
+      >
+        Class Analytics
+    </Link>
     {user?.role === "lecturer" && (
 
       <button
@@ -202,11 +207,51 @@ const [topicDescription, setTopicDescription] =
       >
         + Create Topic
       </button>
+      
 
+    )}
+
+  </div> */}
+  <div className="mb-6 flex items-center justify-between">
+
+  <h2 className="text-3xl font-bold">
+    Topics
+  </h2>
+
+  <div className="flex gap-3">
+
+    {user?.role === "lecturer" && (
+      <Link
+        href={`/courses/${params.id}/analytics`}
+        className="rounded-lg bg-black px-4 py-2 text-white"
+      >
+        Class Analytics
+      </Link>
+    )}
+
+    {user?.role === "student" && (
+      <Link
+        href={`/courses/${params.id}/analytics`}
+        className="rounded-lg bg-black px-4 py-2 text-white"
+      >
+        My Analytics
+      </Link>
+    )}
+
+    {user?.role === "lecturer" && (
+      <button
+        onClick={() =>
+          setShowCreateTopicModal(true)
+        }
+        className="rounded bg-black px-4 py-2 text-white"
+      >
+        + Create Topic
+      </button>
     )}
 
   </div>
 
+</div>
   {topics.length === 0 ? (
 
     <div className="rounded-xl border p-6 text-gray-500">
