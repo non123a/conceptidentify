@@ -10,10 +10,24 @@ load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-def generate_questions(topic_name, material_text, num_questions=3, question_type="mcq", custom_prompt=""):
+def generate_questions(topic_id, topic_name, material_text, num_questions=3, question_type="mcq", custom_prompt=""):
 
     print("\n================ GENERATE AI START ================")
-    retrieved_chunks = search_chunks(topic_name)
+    # retrieved_chunks = search_chunks(topic_name)
+    # retrieved_chunks = search_chunks(
+    #     query=topic_name,
+    #     topic_id=topic_id,
+    # )
+    search_query = (
+        custom_prompt.strip()
+        if custom_prompt.strip()
+        else topic_name
+    )
+
+    retrieved_chunks = search_chunks(
+        search_query,
+        topic_id
+    )
 
     retrieved_text = "\n\n".join([
         chunk.chunk_text

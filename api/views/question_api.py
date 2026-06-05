@@ -176,6 +176,7 @@ def generate_topic_questions(request, topic_id):
     )
 
     questions = generate_questions(
+        topic.id,
         topic.name,
         material_text,
         num_questions=count,
