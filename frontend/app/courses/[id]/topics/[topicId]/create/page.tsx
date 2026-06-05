@@ -36,6 +36,14 @@ export default function CreatePage() {
 
   const [materials, setMaterials] =
     useState<Material[]>([]);
+  const [materialTitle, setMaterialTitle] =
+  useState("");
+
+const [materialFile, setMaterialFile] =
+  useState<File | null>(null);
+
+const [uploadingMaterial, setUploadingMaterial] =
+  useState(false);
    const [aiPrompt, setAiPrompt] =
   useState("");
 
@@ -265,6 +273,64 @@ const saveGeneratedQuestions = async () => {
   } finally {
 
     setSavingGenerated(false);
+
+  }
+};
+const uploadMaterial = async () => {
+
+  if (!materialFile) {
+
+    alert("Select a file");
+
+    return;
+  }
+
+  try {
+
+    setUploadingMaterial(true);
+
+    const formData = new FormData();
+
+    formData.append(
+      "title",
+      materialTitle
+    );
+
+    formData.append(
+      "topic_id",
+      params.topicId as string
+    );
+
+    formData.append(
+      "file",
+      materialFile
+    );
+
+    await api.post(
+      "/materials/upload/",
+      formData
+    );
+
+    setMaterialTitle("");
+    setMaterialFile(null);
+
+    await fetchPage();
+
+    alert(
+      "Material uploaded"
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Upload failed"
+    );
+
+  } finally {
+
+    setUploadingMaterial(false);
 
   }
 };
@@ -730,9 +796,60 @@ const toggleQuestionSelection = (
 )}
       <div className="mt-10">
 
-        <h2 className="mb-6 text-3xl font-bold">
+        {/* <h2 className="mb-6 text-3xl font-bold">
           Materials
-        </h2>
+        </h2> */}
+        <div className="mb-6 rounded-xl border p-6">
+
+  <h3 className="mb-4 text-xl font-semibold">
+
+    Upload Material
+
+  </h3>
+
+  <input
+    type="text"
+    placeholder="Material Title"
+    value={materialTitle}
+    onChange={(e) =>
+      setMaterialTitle(
+        e.target.value
+      )
+    }
+    className="mb-3 w-full rounded border p-3"
+  />
+
+  <input
+    type="file"
+    className="mb-4 w-full"
+    onChange={(e) => {
+
+      if (
+        e.target.files?.[0]
+      ) {
+
+        setMaterialFile(
+          e.target.files[0]
+        );
+
+      }
+
+    }}
+  />
+
+  <button
+    onClick={uploadMaterial}
+    disabled={uploadingMaterial}
+    className="rounded bg-black px-5 py-3 text-white"
+  >
+
+    {uploadingMaterial
+      ? "Uploading..."
+      : "Upload Material"}
+
+  </button>
+
+</div>
 
         {materials.length === 0 ? (
 

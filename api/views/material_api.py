@@ -22,6 +22,11 @@ from materials.models import Material
 from materials.serializers import (
     MaterialSerializer,
 )
+
+from courses.models import (
+    Course,
+    Enrollment,
+)
 # from courses.models import Material
 from topics.models import Topic
 
@@ -105,12 +110,77 @@ def upload_material(request):
     })
 
 
+# @api_view(["GET"])
+# @permission_classes([IsAuthenticated])
+# def course_materials(request, course_id):
+
+#     materials = Material.objects.filter(
+#         topic__course_id=course_id
+#     ).order_by("-uploaded_at")
+
+#     serializer = MaterialSerializer(
+#         materials,
+#         many=True
+#     )
+
+#     return Response({
+#         "success": True,
+#         "data": serializer.data,
+#     })
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def course_materials(request, course_id):
 
+    try:
+
+        course = Course.objects.get(
+            id=course_id
+        )
+
+    except Course.DoesNotExist:
+
+        return Response(
+            {
+                "success": False,
+                "message": "Course not found",
+            },
+            status=404
+        )
+
+    # Lecturer ownership check
+    if request.user.role == "lecturer":
+
+        if course.lecturer != request.user:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Access denied."
+                },
+                status=403
+            )
+
+    # Student enrollment check
+    else:
+
+        is_enrolled = Enrollment.objects.filter(
+            student=request.user,
+            course=course
+        ).exists()
+
+        if not is_enrolled:
+
+            return Response(
+                {
+                    "success": False,
+                    "message":
+                    "You are not enrolled in this course."
+                },
+                status=403
+            )
+
     materials = Material.objects.filter(
-        topic__course_id=course_id
+        topic__course=course
     ).order_by("-uploaded_at")
 
     serializer = MaterialSerializer(
@@ -118,18 +188,86 @@ def course_materials(request, course_id):
         many=True
     )
 
-    return Response({
-        "success": True,
-        "data": serializer.data,
-    })
+    return Response(
+        {
+            "success": True,
+            "data": serializer.data,
+        }
+    )
 
+# @api_view(["GET"])
+# @permission_classes([IsAuthenticated])
+# def topic_materials(request, topic_id):
 
+#     materials = Material.objects.filter(
+#         topic_id=topic_id
+#     ).order_by("-uploaded_at")
+
+#     serializer = MaterialSerializer(
+#         materials,
+#         many=True
+#     )
+
+#     return Response({
+#         "success": True,
+#         "data": serializer.data,
+#     })
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def topic_materials(request, topic_id):
 
+    try:
+
+        topic = Topic.objects.get(
+            id=topic_id
+        )
+
+    except Topic.DoesNotExist:
+
+        return Response(
+            {
+                "success": False,
+                "message": "Topic not found",
+            },
+            status=404
+        )
+
+    course = topic.course
+
+    # Lecturer ownership check
+    if request.user.role == "lecturer":
+
+        if course.lecturer != request.user:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Access denied."
+                },
+                status=403
+            )
+
+    # Student enrollment check
+    else:
+
+        is_enrolled = Enrollment.objects.filter(
+            student=request.user,
+            course=course
+        ).exists()
+
+        if not is_enrolled:
+
+            return Response(
+                {
+                    "success": False,
+                    "message":
+                    "You are not enrolled in this course."
+                },
+                status=403
+            )
+
     materials = Material.objects.filter(
-        topic_id=topic_id
+        topic=topic
     ).order_by("-uploaded_at")
 
     serializer = MaterialSerializer(
@@ -137,7 +275,9 @@ def topic_materials(request, topic_id):
         many=True
     )
 
-    return Response({
-        "success": True,
-        "data": serializer.data,
-    })
+    return Response(
+        {
+            "success": True,
+            "data": serializer.data,
+        }
+    )

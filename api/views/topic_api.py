@@ -10,7 +10,7 @@ from api.permissions import IsLecturer, is_course_owner
 
 from rest_framework.response import Response
 
-from courses.models import Course
+from courses.models import Course, Enrollment
 
 from topics.models import Topic
 
@@ -19,6 +19,36 @@ from topics.serializers import (
 )
 
 
+# @api_view(["GET"])
+# @permission_classes([IsAuthenticated])
+# def course_topics(request, course_id):
+
+#     try:
+
+#         course = Course.objects.get(
+#             id=course_id
+#         )
+
+#     except Course.DoesNotExist:
+
+#         return Response({
+#             "success": False,
+#             "message": "Course not found",
+#         }, status=404)
+
+#     topics = Topic.objects.filter(
+#         course=course
+#     )
+
+#     serializer = TopicSerializer(
+#         topics,
+#         many=True
+#     )
+
+#     return Response({
+#         "success": True,
+#         "data": serializer.data,
+#     })
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def course_topics(request, course_id):
@@ -31,10 +61,45 @@ def course_topics(request, course_id):
 
     except Course.DoesNotExist:
 
-        return Response({
-            "success": False,
-            "message": "Course not found",
-        }, status=404)
+        return Response(
+            {
+                "success": False,
+                "message": "Course not found",
+            },
+            status=404
+        )
+
+    # Lecturer ownership check
+    if request.user.role == "lecturer":
+
+        if course.lecturer != request.user:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Access denied."
+                },
+                status=403
+            )
+
+    # Student enrollment check
+    else:
+
+        is_enrolled = Enrollment.objects.filter(
+            student=request.user,
+            course=course
+        ).exists()
+
+        if not is_enrolled:
+
+            return Response(
+                {
+                    "success": False,
+                    "message":
+                    "You are not enrolled in this course."
+                },
+                status=403
+            )
 
     topics = Topic.objects.filter(
         course=course
@@ -45,11 +110,12 @@ def course_topics(request, course_id):
         many=True
     )
 
-    return Response({
-        "success": True,
-        "data": serializer.data,
-    })
-
+    return Response(
+        {
+            "success": True,
+            "data": serializer.data,
+        }
+    )
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated, IsLecturer])
@@ -92,6 +158,29 @@ def create_topic(request, course_id):
     })
 
 
+# @api_view(["GET"])
+# @permission_classes([IsAuthenticated])
+# def topic_detail(request, topic_id):
+
+#     try:
+
+#         topic = Topic.objects.get(
+#             id=topic_id
+#         )
+
+#     except Topic.DoesNotExist:
+
+#         return Response({
+#             "success": False,
+#             "message": "Topic not found",
+#         }, status=404)
+
+#     serializer = TopicSerializer(topic)
+
+#     return Response({
+#         "success": True,
+#         "data": serializer.data,
+#     })
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def topic_detail(request, topic_id):
@@ -104,14 +193,55 @@ def topic_detail(request, topic_id):
 
     except Topic.DoesNotExist:
 
-        return Response({
-            "success": False,
-            "message": "Topic not found",
-        }, status=404)
+        return Response(
+            {
+                "success": False,
+                "message": "Topic not found",
+            },
+            status=404
+        )
 
-    serializer = TopicSerializer(topic)
+    course = topic.course
 
-    return Response({
-        "success": True,
-        "data": serializer.data,
-    })
+    # Lecturer ownership check
+    if request.user.role == "lecturer":
+
+        if course.lecturer != request.user:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Access denied."
+                },
+                status=403
+            )
+
+    # Student enrollment check
+    else:
+
+        is_enrolled = Enrollment.objects.filter(
+            student=request.user,
+            course=course
+        ).exists()
+
+        if not is_enrolled:
+
+            return Response(
+                {
+                    "success": False,
+                    "message":
+                    "You are not enrolled in this course."
+                },
+                status=403
+            )
+
+    serializer = TopicSerializer(
+        topic
+    )
+
+    return Response(
+        {
+            "success": True,
+            "data": serializer.data,
+        }
+    )
