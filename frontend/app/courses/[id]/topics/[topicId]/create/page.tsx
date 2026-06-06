@@ -334,6 +334,38 @@ const uploadMaterial = async () => {
 
   }
 };
+const deleteMaterial = async (
+  materialId: number
+) => {
+
+  const confirmed = window.confirm(
+    "Delete this material?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+
+    await api.delete(
+      `/materials/${materialId}/delete/`
+    );
+
+    setMaterials((prev) =>
+      prev.filter(
+        (m) => m.id !== materialId
+      )
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Failed to delete material"
+    );
+
+  }
+};
 const removeGeneratedQuestion = (
   index: number
 ) => {
@@ -545,14 +577,35 @@ const toggleQuestionSelection = (
 
                 </p>
 
-                <a
+                {/* <a
                   href={`http://127.0.0.1:8000${material.file}`}
                   target="_blank"
                   className="mt-4 inline-block text-blue-600 hover:underline"
                   rel="noopener noreferrer"
                 >
                   View File
-                </a>
+                </a> */}
+                <div className="mt-4 flex gap-4">
+
+                  <a
+                    href={`http://127.0.0.1:8000${material.file}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    View File
+                  </a>
+
+                  <button
+                    onClick={() =>
+                      deleteMaterial(material.id)
+                    }
+                    className="text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
+
+                </div>
 
               </div>
 

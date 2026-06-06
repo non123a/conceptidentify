@@ -14,7 +14,7 @@ from rest_framework.decorators import (
 from rest_framework.permissions import (
     IsAuthenticated,
 )
-
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
 from materials.models import Material
@@ -109,24 +109,6 @@ def upload_material(request):
         "title": material.title,
     })
 
-
-# @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
-# def course_materials(request, course_id):
-
-#     materials = Material.objects.filter(
-#         topic__course_id=course_id
-#     ).order_by("-uploaded_at")
-
-#     serializer = MaterialSerializer(
-#         materials,
-#         many=True
-#     )
-
-#     return Response({
-#         "success": True,
-#         "data": serializer.data,
-#     })
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def course_materials(request, course_id):
@@ -195,23 +177,6 @@ def course_materials(request, course_id):
         }
     )
 
-# @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
-# def topic_materials(request, topic_id):
-
-#     materials = Material.objects.filter(
-#         topic_id=topic_id
-#     ).order_by("-uploaded_at")
-
-#     serializer = MaterialSerializer(
-#         materials,
-#         many=True
-#     )
-
-#     return Response({
-#         "success": True,
-#         "data": serializer.data,
-#     })
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def topic_materials(request, topic_id):
@@ -279,5 +244,42 @@ def topic_materials(request, topic_id):
         {
             "success": True,
             "data": serializer.data,
+        }
+    )
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated, IsLecturer])
+def delete_material(request, material_id):
+
+    material = get_object_or_404(
+        Material,
+        id=material_id
+    )
+
+    if material.topic.course.lecturer != request.user:
+
+        return Response(
+            {
+                "success": False,
+                "message": "Access denied."
+            },
+            status=403
+        )
+
+    # delete physical file
+    if material.file:
+
+        material.file.delete(
+            save=False
+        )
+
+    material.delete()
+
+    return Response(
+        {
+            "success": True,
+            "message":
+            "Material deleted successfully"
         }
     )

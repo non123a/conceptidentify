@@ -1,9 +1,4 @@
 from django.urls import include, path
-# from .views import (
-#     LoginView,
-#     MeView,
-#     LogoutView,
-# )
 
 from .views import (
     LoginView,

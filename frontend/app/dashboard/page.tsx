@@ -145,6 +145,7 @@ const joinCourse = async () => {
   }
 
   if (!user) {
+    console.log("Dashboard: user is null");
     return (
       <div className="p-10 text-red-500">
         Not logged in

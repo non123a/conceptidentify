@@ -13,9 +13,9 @@ export function middleware(request: NextRequest) {
   ];
 
   // Prevent authenticated users from visiting the login page
-  if (token && request.nextUrl.pathname.startsWith("/login")) {
-    return NextResponse.redirect(new URL("/courses", request.url));
-  }
+  // if (token && request.nextUrl.pathname.startsWith("/login")) {
+  //   return NextResponse.redirect(new URL("/courses", request.url));
+  // }
 
   const isProtected = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)

@@ -6,7 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
 from django.contrib.auth import authenticate
-
+from rest_framework.permissions import (
+    IsAuthenticated,
+    AllowAny,
+)
 # from .serializers import LoginSerializer, UserSerializer, RegisterSerializer
 from .serializers import (
     LoginSerializer,
@@ -16,7 +19,8 @@ from .serializers import (
 class LoginView(APIView):
 
     def post(self, request):
-
+        authentication_classes = []
+        permission_classes = [AllowAny]
         serializer = LoginSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -85,6 +89,8 @@ class LoginView(APIView):
         )
 
 class LogoutView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
     def post(self, request):
         response = Response({"success": True, "message": "Successfully logged out"})
         response.delete_cookie('access')
@@ -106,7 +112,8 @@ class MeView(APIView):
     
 
 class RegisterView(APIView):
-
+    authentication_classes = []
+    permission_classes = [AllowAny]
     def post(self, request):
 
         serializer = RegisterSerializer(

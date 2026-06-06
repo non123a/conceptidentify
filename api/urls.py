@@ -30,6 +30,7 @@ from api.views.material_api import (
     upload_material,
     course_materials,
     topic_materials,
+    delete_material,
 )
 from api.views.material_api import (
     upload_material,
@@ -80,6 +81,11 @@ urlpatterns = [
         "courses/<int:course_id>/materials/",
         course_materials,
         name="course_materials",
+    ),
+    path(
+        "materials/<int:material_id>/delete/",
+        delete_material,
+        name="delete_material",
     ),
     path(
         "courses/<int:course_id>/topics/",

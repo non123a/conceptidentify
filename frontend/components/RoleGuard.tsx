@@ -17,19 +17,35 @@ const router = useRouter();
 
 useEffect(() => {
     if (!loading && !user) {
-      router.push("/login");
+      // router.push("/login");
+      router.replace("/login");
       return;
     }
 
     if (!loading && user && user.role !== allowedRole) {
-      router.push("/dashboard");
+      // router.push("/dashboard");
+      router.replace("/dashboard");
     }
 }, [user, loading, allowedRole, router]);
 
-if (loading || !user || user.role !== allowedRole) {
-    // Return null to prevent flashing the page content before redirect
-    return null;
+// if (loading || !user || user.role !== allowedRole) {
+//     // Return null to prevent flashing the page content before redirect
+//     return null;
+// }
+if (loading) {
+  return (
+    <div className="p-10">
+      Loading...
+    </div>
+  );
 }
 
+if (!user || user.role !== allowedRole) {
+  return (
+    <div className="p-10">
+      Redirecting...
+    </div>
+  );
+}
 return <>{children}</>;
 }

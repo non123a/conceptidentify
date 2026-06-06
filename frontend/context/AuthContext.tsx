@@ -69,9 +69,15 @@ export function AuthProvider({
 
       setUser(response.data.data);
 
-    } catch {
+    } catch (error: any) {
 
       setUser(null);
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname !== "/login"
+      ) {
+        window.location.href = "/login";
+      }
 
     } finally {
 
@@ -183,3 +189,30 @@ export function useAuth() {
 
   return context;
 }
+
+
+const fetchUser = async () => {
+
+  try {
+
+    console.log("Calling /auth/me");
+
+    const response = await api.get("/auth/me/");
+
+    console.log("User loaded", response.data);
+
+    setUser(response.data.data);
+
+  } catch (error) {
+
+    console.log("User fetch failed");
+
+    setUser(null);
+
+  } finally {
+
+    setLoading(false);
+
+  }
+
+};
