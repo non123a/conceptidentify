@@ -277,10 +277,20 @@ const saveGeneratedQuestions = async () => {
   }
 };
 const uploadMaterial = async () => {
+  if (!materialTitle.trim()) {
+
+    alert(
+      "Material title is required."
+    );
+
+    return;
+  }
 
   if (!materialFile) {
 
-    alert("Select a file");
+    alert(
+      "Please select a PDF file."
+    );
 
     return;
   }
@@ -503,36 +513,61 @@ const toggleQuestionSelection = (
 
   </h3>
 
+<input
+  type="text"
+  placeholder="Material Title"
+  value={materialTitle}
+  onChange={(e) =>
+    setMaterialTitle(
+      e.target.value
+    )
+  }
+  className="mb-3 w-full rounded border p-3"
+/>
+{materialFile && (
+
+  <p className="mt-2 text-sm text-gray-500">
+
+    Selected:
+    {" "}
+    {materialFile.name}
+
+  </p>
+
+)}
+
   <input
-    type="text"
-    placeholder="Material Title"
-    value={materialTitle}
-    onChange={(e) =>
-      setMaterialTitle(
-        e.target.value
-      )
+  type="file"
+  accept=".pdf"
+  className="mb-4 w-full"
+  onChange={(e) => {
+
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+
+      alert(
+        "Only PDF files are allowed."
+      );
+
+      return;
     }
-    className="mb-3 w-full rounded border p-3"
-  />
 
-  <input
-    type="file"
-    className="mb-4 w-full"
-    onChange={(e) => {
+    if (file.size > 20 * 1024 * 1024) {
 
-      if (
-        e.target.files?.[0]
-      ) {
+      alert(
+        "File size must be less than 20MB."
+      );
 
-        setMaterialFile(
-          e.target.files[0]
-        );
+      return;
+    }
 
-      }
+    setMaterialFile(file);
 
-    }}
-  />
-
+  }}
+/>
   <button
     onClick={uploadMaterial}
     disabled={uploadingMaterial}
@@ -577,14 +612,6 @@ const toggleQuestionSelection = (
 
                 </p>
 
-                {/* <a
-                  href={`http://127.0.0.1:8000${material.file}`}
-                  target="_blank"
-                  className="mt-4 inline-block text-blue-600 hover:underline"
-                  rel="noopener noreferrer"
-                >
-                  View File
-                </a> */}
                 <div className="mt-4 flex gap-4">
 
                   <a

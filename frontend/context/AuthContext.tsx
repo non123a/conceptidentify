@@ -191,28 +191,3 @@ export function useAuth() {
 }
 
 
-const fetchUser = async () => {
-
-  try {
-
-    console.log("Calling /auth/me");
-
-    const response = await api.get("/auth/me/");
-
-    console.log("User loaded", response.data);
-
-    setUser(response.data.data);
-
-  } catch (error) {
-
-    console.log("User fetch failed");
-
-    setUser(null);
-
-  } finally {
-
-    setLoading(false);
-
-  }
-
-};

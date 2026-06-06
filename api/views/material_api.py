@@ -44,7 +44,30 @@ def upload_material(request):
         return Response({
             "error": "No file uploaded"
         }, status=400)
+    if not file:
+        return Response({
+            "error": "No file uploaded"
+        }, status=400)
 
+    # PDF validation
+    if file.content_type != "application/pdf":
+        return Response(
+            {
+                "error":
+                "Only PDF files are allowed."
+            },
+            status=400
+        )
+
+    # Size validation (20MB)
+    if file.size > 20 * 1024 * 1024:
+        return Response(
+            {
+                "error":
+                "File size must be less than 20MB."
+            },
+            status=400
+        )
     try:
         topic = Topic.objects.get(id=topic_id)
 
@@ -59,12 +82,6 @@ def upload_material(request):
             "error": "You are not the instructor for this course",
         }, status=403)
 
-    # material = Material.objects.create(
-    #     topic=topic,
-    #     title=title,
-    #     file=file,
-    #     uploaded_by=request.user
-    # )
     material = Material.objects.create(
     topic=topic,
     title=title,
