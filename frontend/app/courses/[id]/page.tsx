@@ -29,6 +29,12 @@ type Topic = {
   question_count: number;
 };
 
+type StudentAnalytics = {
+  topic: string;
+  performance: number;
+  has_data: boolean;
+};
+
 
 
 export default function CourseDetailPage() {
@@ -45,7 +51,8 @@ export default function CourseDetailPage() {
     useState(true);
   const [showCreateTopicModal, setShowCreateTopicModal] =
   useState(false);
-
+const [studentAnalytics, setStudentAnalytics] =
+  useState<StudentAnalytics[]>([]);
 const [topicName, setTopicName] =
   useState("");
 
@@ -70,6 +77,18 @@ const [topicDescription, setTopicDescription] =
             ),
 
         ]);
+        if (user?.role === "student") {
+
+          const analyticsResponse =
+            await api.get(
+              `/courses/${params.id}/student-analytics/`
+            );
+
+          setStudentAnalytics(
+            analyticsResponse.data.analytics
+          );
+
+        }
 
         setCourse(
             courseResponse.data.data
@@ -132,7 +151,7 @@ const [topicDescription, setTopicDescription] =
     void Promise.resolve().then(fetchCourse);
 
   }, []);
-
+  
   if (loading) {
 
     return (
@@ -185,33 +204,114 @@ const [topicDescription, setTopicDescription] =
   </div>
 
 <div>
+  {user?.role === "student" && (
 
-  {/* <div className="mb-6 flex items-center justify-between">
+    <div className="mb-8 rounded-xl border p-6 shadow-sm">
 
-    <h2 className="text-3xl font-bold">
-      Topics
-    </h2>
-    <Link
-        href={`/courses/${params.id}/analytics`}
-        className="rounded-lg bg-black px-4 py-2 text-white"
-      >
-        Class Analytics
-    </Link>
-    {user?.role === "lecturer" && (
+      <h2 className="mb-4 text-2xl font-bold">
 
-      <button
-        onClick={() =>
-          setShowCreateTopicModal(true)
-        }
-        className="rounded bg-black px-4 py-2 text-white"
-      >
-        + Create Topic
-      </button>
-      
+        My Learning Progress
 
-    )}
+      </h2>
 
-  </div> */}
+      {studentAnalytics.length === 0 ? (
+
+        <p className="text-gray-500">
+
+          No learning data available yet.
+
+        </p>
+
+      ) : (
+
+      <div className="overflow-x-auto">
+
+        <table className="w-full">
+
+          <thead>
+
+            <tr className="border-b">
+
+              <th className="py-3 text-left">
+                Topic
+              </th>
+
+              <th className="py-3 text-left">
+                Status
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {studentAnalytics.map((topic) => (
+
+              <tr
+                key={topic.topic}
+                className="border-b"
+              >
+
+                <td className="py-3">
+
+                  {topic.topic}
+
+                </td>
+
+                <td className="py-3">
+
+                  {!topic.has_data ? (
+
+                    <span className="text-gray-500">
+
+                      No Data Yet
+
+                    </span>
+
+                  ) : topic.performance < 40 ? (
+
+                    <span className="text-red-600">
+
+                      ❌ Weak
+
+                    </span>
+
+                  ) : topic.performance < 70 ? (
+
+                    <span className="text-yellow-600">
+
+                      ⚠ Needs Improvement
+
+                    </span>
+
+                  ) : (
+
+                    <span className="text-green-600">
+
+                      ✔ Strong
+
+                    </span>
+
+                  )}
+
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      )}
+
+    </div>
+
+  )}
   <div className="mb-6 flex items-center justify-between">
 
   <h2 className="text-3xl font-bold">
@@ -231,7 +331,7 @@ const [topicDescription, setTopicDescription] =
 
     {user?.role === "student" && (
       <Link
-        href={`/courses/${params.id}/analytics`}
+        href={`/courses/${params.id}/student-analytics`}
         className="rounded-lg bg-black px-4 py-2 text-white"
       >
         My Analytics
@@ -323,14 +423,19 @@ const [topicDescription, setTopicDescription] =
 
                 </>
               ) : (
-                <Link
-                    href={`/courses/${params.id}/topics/${topic.id}`}
-                    className="rounded-lg border bg-black px-4 py-3 text-center text-sm font-medium text-white transition hover:opacity-90"
+                <><Link
+                  href={`/courses/${params.id}/topics/${topic.id}`}
+                  className="rounded-lg border bg-black px-4 py-3 text-center text-sm font-medium text-white transition hover:opacity-90"
                 >
 
-                    Answer Questions
+                  Answer Questions
 
-                </Link>
+                </Link><Link
+                  href={`/courses/${params.id}/topics/${topic.id}/student-analytics`}
+                  className="rounded-lg border px-4 py-3 text-center text-sm font-medium"
+                >
+                    My Performance
+                  </Link></>
               )}
 
                 </div>

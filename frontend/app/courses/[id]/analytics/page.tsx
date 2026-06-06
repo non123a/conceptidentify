@@ -4,7 +4,18 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import api from "@/lib/api";
-import Link from "next/dist/client/link";
+import Link from "next/link";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend,
+} from "recharts";
 
 type WeakQuestion = {
   text: string;
@@ -45,6 +56,14 @@ export default function AnalyticsPage() {
 
   const [studentsNeedingHelp, setStudentsNeedingHelp] =
     useState<StudentHelp[]>([]);
+
+    const chartData = topics.map(
+  (topic) => ({
+    topic: topic.topic,
+    performance: topic.performance,
+    completion: topic.completion_rate,
+  })
+);
 
   useEffect(() => {
 
@@ -228,6 +247,9 @@ export default function AnalyticsPage() {
                 <th className="py-3 text-left">
                   Topic
                 </th>
+                <th className="py-3 text-left">
+                    Action
+                </th>
 
                 <th className="py-3 text-left">
                   Performance
@@ -254,16 +276,26 @@ export default function AnalyticsPage() {
                   className="border-b"
                 >
 
-                  {/* <td className="py-3">
-                    {topic.topic}
-                  </td> */}
                     <td className="py-3">
+                        {topic.topic}
+                    </td>
+                    {/* <td className="py-3">
 
                         <Link
                             href={`/courses/${params.id}/topics/${topic.topic_id}/analytics`}
                             className="font-medium text-blue-600 hover:underline"
                         >
                             {topic.topic}
+                        </Link>
+
+                    </td> */}
+                    <td className="py-3">
+
+                        <Link
+                            href={`/courses/${params.id}/topics/${topic.topic_id}/analytics`}
+                            className="rounded border px-3 py-2 text-sm hover:bg-gray-50"
+                        >
+                            View Analytics
                         </Link>
 
                     </td>
@@ -293,6 +325,57 @@ export default function AnalyticsPage() {
 
       </div>
 
+    <div className="mt-8 rounded-xl border p-6">
+
+    <h2 className="mb-6 text-2xl font-bold">
+        Topic Performance Overview
+    </h2>
+
+    <div className="h-[450px]">
+
+        <ResponsiveContainer
+        width="100%"
+        height="100%"
+        >
+
+        <ComposedChart
+            data={chartData}
+        >
+
+            <CartesianGrid
+            strokeDasharray="3 3"
+            />
+
+            <XAxis
+            dataKey="topic"
+            />
+
+            <YAxis
+            domain={[0, 100]}
+            />
+
+            <Tooltip />
+
+            <Legend />
+
+            <Bar
+            dataKey="performance"
+            name="Performance %"
+            />
+
+            <Line
+            type="monotone"
+            dataKey="completion"
+            name="Completion %"
+            />
+
+        </ComposedChart>
+
+        </ResponsiveContainer>
+
+    </div>
+
+    </div>
       {/* Students Needing Help */}
 
       <div className="mt-8 rounded-xl border p-6">

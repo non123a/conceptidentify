@@ -25,6 +25,7 @@ from services.analysis import (
     get_class_topic_performance,
     get_single_topic_performance,
     get_students_needing_help,
+    get_student_topic_performance,
 )
 
 
@@ -182,3 +183,63 @@ def topic_analytics(request, topic_id):
             },
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsStudent])
+def student_topic_analytics(
+    request,
+    topic_id
+):
+
+    topic = get_object_or_404(
+        Topic,
+        id=topic_id
+    )
+
+    enrollment = Enrollment.objects.filter(
+        student=request.user,
+        course=topic.course
+    ).first()
+
+    if not enrollment:
+
+        return Response(
+            {
+                "success": False,
+                "error": "Not enrolled in this course"
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    analytics = get_student_topic_performance(
+        request.user,
+        topic
+    )
+
+    return Response({
+
+        "success": True,
+
+        "topic": {
+
+            "id": topic.id,
+
+            "name": topic.name,
+
+            "course": {
+
+                "id":
+                    topic.course.id,
+
+                "name":
+                    topic.course.name,
+
+            }
+
+        },
+
+        "analytics":
+            analytics,
+
+    })

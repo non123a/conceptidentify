@@ -50,6 +50,7 @@ from api.views.student_api import (
 from api.views.analytics_api import (
     student_analytics,
     lecturer_analytics,
+    student_topic_analytics,
     topic_analytics,
 )
 urlpatterns = [
@@ -126,6 +127,10 @@ urlpatterns = [
         "topics/<int:topic_id>/bulk-create/",
         bulk_create_questions,
         name="bulk_create_questions",
+    ),
+    path(
+        "topics/<int:topic_id>/student-analytics/",
+        student_topic_analytics
     ),
     path(
         "questions/<int:question_id>/toggle/",
