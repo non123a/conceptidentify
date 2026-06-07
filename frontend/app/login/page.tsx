@@ -2,11 +2,43 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-
+import { GoogleLogin } from "@react-oauth/google";
+import api from "@/lib/api";
+import Link from "next/link";
 export default function LoginPage() {
 
   const { login } = useAuth();
 
+  const handleGoogleLogin = async (
+    credentialResponse: any
+  ) => {
+
+    try {
+
+      const response = await api.post(
+        "/auth/google/",
+        {
+          credential:
+            credentialResponse.credential,
+        }
+      );
+
+      if (
+        response.data.success
+      ) {
+
+        window.location.href =
+          "/dashboard";
+      }
+
+    } catch (error: any) {
+
+      setError(
+        error?.response?.data?.message ||
+        "Google login failed"
+      );
+    }
+  };
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -45,6 +77,7 @@ export default function LoginPage() {
           Login
         </h1>
 
+
         {error && (
           <p className="mb-4 text-red-500">
             {error}
@@ -71,6 +104,13 @@ export default function LoginPage() {
           }
         />
 
+        {/* <button
+          onClick={handleLogin}
+          className="w-full rounded bg-black p-3 text-white"
+        >
+          Login
+          
+        </button> */}
         <button
           onClick={handleLogin}
           className="w-full rounded bg-black p-3 text-white"
@@ -78,6 +118,32 @@ export default function LoginPage() {
           Login
         </button>
 
+        <div className="mt-4 text-center">
+          <span className="text-gray-600">
+            Don't have an account?
+          </span>
+
+          <Link
+            href="/register"
+            className="ml-1 font-medium text-blue-600 hover:underline"
+          >
+            Register
+          </Link>
+        </div>
+                <div className="my-4 text-center text-gray-500">
+          OR
+        </div>
+
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleLogin}
+            onError={() =>
+              setError(
+                "Google login failed"
+              )
+            }
+          />
+        </div>
       </div>
 
     </div>

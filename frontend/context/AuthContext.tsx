@@ -18,12 +18,6 @@ type User = {
     last_name: string;
 };
 
-// type AuthContextType = {
-//   user: User | null;
-//   loading: boolean;
-//   login: (username: string, password: string) => Promise<boolean>;
-//   logout: () => void;
-// };
 type AuthContextType = {
   user: User | null;
   loading: boolean;
@@ -72,9 +66,20 @@ export function AuthProvider({
     } catch (error: any) {
 
       setUser(null);
+      // if (
+      //   typeof window !== "undefined" &&
+      //   window.location.pathname !== "/login"
+      // ) {
+      //   window.location.href = "/login";
+      // }
+      const publicRoutes = [
+        "/login",
+        "/register",
+      ];
+
       if (
         typeof window !== "undefined" &&
-        window.location.pathname !== "/login"
+        !publicRoutes.includes(window.location.pathname)
       ) {
         window.location.href = "/login";
       }

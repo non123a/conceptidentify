@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
+import Link from "next/link";
+import api from "@/lib/api";
 
 export default function RegisterPage() {
 
@@ -12,11 +15,58 @@ export default function RegisterPage() {
     email: "",
     first_name: "",
     last_name: "",
-    role: "student",
+    role: "",
     password: "",
     confirm_password: "",
   });
+  const handleGoogleRegister = async (
+    credentialResponse: any
+  ) => {
 
+    try {
+
+      const response = await api.post(
+        "/auth/google/",
+        {
+          credential:
+            credentialResponse.credential,
+          role: form.role,
+        }
+      );
+
+      console.log(response.data);
+
+      // if (response.data.pending) {
+
+      //   setSuccess(response.data.message);
+      //   return;
+      // }
+      if (response.data.pending) {
+
+        setSuccess(
+          response.data.message
+        );
+
+        setTimeout(() => {
+          window.location.href =
+            "/login";
+        }, 2000);
+
+        return;
+      }
+
+      window.location.href = "/dashboard";
+
+    } catch (error: any) {
+
+      console.log(error);
+
+      setError(
+        error?.response?.data?.message ||
+        "Google login failed"
+      );
+    }
+  };
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -121,6 +171,9 @@ export default function RegisterPage() {
             })
           }
         >
+          <option value="">
+            Select Role
+          </option>
           <option value="student">
             Student
           </option>
@@ -162,6 +215,38 @@ export default function RegisterPage() {
         >
           Register
         </button>
+        <div className="mt-4 text-center text-sm">
+          <span className="text-gray-600">
+            Already have an account?
+          </span>
+
+          <Link
+            href="/login"
+            className="ml-1 text-blue-600 hover:underline"
+          >
+            Login
+          </Link>
+        </div>
+        <div className="mt-4 flex justify-center">
+
+          {form.role ? (
+
+            <GoogleLogin
+              onSuccess={handleGoogleRegister}
+              onError={() =>
+                setError("Google login failed")
+              }
+            />
+
+          ) : (
+
+            <p className="text-sm text-gray-500">
+              Select a role first, To use Google Register
+            </p>
+
+          )}
+
+        </div>
 
       </div>
 
