@@ -276,6 +276,42 @@ const saveGeneratedQuestions = async () => {
 
   }
 };
+const approveAllGeneratedQuestions = async () => {
+
+  try {
+
+    setSavingGenerated(true);
+
+    await api.post(
+      `/topics/${params.topicId}/bulk-create/`,
+      {
+        questions: generatedQuestions,
+      }
+    );
+
+    alert(
+      "All generated questions approved"
+    );
+
+    setGeneratedQuestions([]);
+    setSelectedQuestions([]);
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Failed to approve questions"
+    );
+
+  } finally {
+
+    setSavingGenerated(false);
+
+  }
+
+};
+
 const uploadMaterial = async () => {
   if (!materialTitle.trim()) {
 
@@ -873,6 +909,16 @@ const toggleQuestionSelection = (
                   
 
               </button>
+                <button
+                  onClick={approveAllGeneratedQuestions}
+                  disabled={
+                    savingGenerated ||
+                    generatedQuestions.length === 0
+                  }
+                  className="rounded bg-blue-600 px-5 py-3 text-white"
+                >
+                  Approve All
+                </button>
 
             </div>
 
