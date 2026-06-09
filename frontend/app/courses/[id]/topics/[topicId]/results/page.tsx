@@ -27,12 +27,21 @@ type StudentResult = {
   created_at: string;
 };
 
+// type ResultsData = {
+//   success: boolean;
+//   topic: Topic;
+//   total_responses: number;
+//   average_score: number;
+//   total_score: number;
+//   results: StudentResult[];
+// };
 type ResultsData = {
   success: boolean;
   topic: Topic;
   total_responses: number;
   average_score: number;
   total_score: number;
+  pending_count: number;
   results: StudentResult[];
 };
 
@@ -56,7 +65,8 @@ export default function ResultsPage() {
   const [resultsData, setResultsData] = useState<ResultsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [reevaluating, setReevaluating] =
+    useState(false);
   // ====================================
   // FETCH RESULTS
   // ====================================
@@ -89,7 +99,27 @@ export default function ResultsPage() {
       setLoading(false);
     }
   };
+  const reevaluatePending = async () => {
 
+    try {
+
+      await api.post(
+        `/topics/${params.topicId}/reevaluate/`
+      );
+
+      await fetchResults();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Failed to re-evaluate answers."
+      );
+
+    }
+
+  };
   useEffect(() => {
     void Promise.resolve().then(fetchResults);
   }, [params.topicId]);
@@ -130,7 +160,7 @@ export default function ResultsPage() {
     );
   }
 
-  const { topic, total_responses, average_score, total_score, results } =
+  const { topic, total_responses, average_score, total_score,pending_count, results } =
     resultsData;
 
   // ====================================
@@ -165,7 +195,40 @@ export default function ResultsPage() {
         <h1 className="text-4xl font-bold mb-2">{topic.name} - Results</h1>
         <p className="text-gray-600">View all your quiz responses</p>
       </div>
+      {pending_count > 0 && (
 
+        <div className="mb-6 rounded-lg border border-yellow-300 bg-yellow-50 p-4">
+
+          <div className="flex items-center justify-between">
+
+            <div>
+
+              <p className="font-semibold text-yellow-800">
+
+                Pending Evaluation
+
+              </p>
+
+              <p className="text-sm text-yellow-700">
+
+                {pending_count} answer(s) are still waiting for AI evaluation.
+
+              </p>
+
+            </div>
+
+            <button
+              onClick={reevaluatePending}
+              className="rounded bg-yellow-600 px-4 py-2 text-white"
+            >
+              Re-Evaluate
+            </button>
+
+          </div>
+
+        </div>
+
+      )}
       {/* SUMMARY CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         {/* Total Responses */}
@@ -213,12 +276,35 @@ export default function ResultsPage() {
                 <p className="text-sm text-gray-500">
                   Question {index + 1} ({result.question_type.toUpperCase()})
                 </p>
-                <p className="text-sm font-semibold">
+                {result.feedback === "Evaluating..." ? (
+
+                  <p className="text-sm font-semibold text-yellow-600">
+
+                    ⏳ Pending Evaluation
+
+                  </p>
+
+                ) : (
+
+                  <p className="text-sm font-semibold">
+
+                    Score:
+
+                    <span className="text-blue-600 ml-1">
+
+                      {(result.score * 100).toFixed(1)}%
+
+                    </span>
+
+                  </p>
+
+                )}
+                {/* <p className="text-sm font-semibold">
                   Score:{" "}
                   <span className="text-blue-600 ml-1">
                     {(result.score * 100).toFixed(1)}%
                   </span>
-                </p>
+                </p> */}
               </div>
               <p className="text-lg font-semibold text-gray-800">
                 {result.question_text}

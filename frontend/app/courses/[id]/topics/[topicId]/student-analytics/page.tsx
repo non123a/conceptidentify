@@ -34,19 +34,53 @@ export default function StudentTopicAnalyticsPage() {
 
   const [loading, setLoading] =
     useState(true);
-
+  const [isReevaluating, setIsReevaluating] =
+    useState(false);
   const [topicName, setTopicName] =
     useState("");
 
   const [analytics, setAnalytics] =
     useState<Analytics | null>(null);
 
+  // useEffect(() => {
+
+  //   fetchAnalytics();
+
+  // }, []);
   useEffect(() => {
 
-    fetchAnalytics();
+  const loadAnalytics = async () => {
 
-  }, []);
+    await autoReevaluate();
 
+    await fetchAnalytics();
+
+  };
+
+  loadAnalytics();
+
+}, []);
+  const autoReevaluate = async () => {
+
+        try {
+
+          await api.post(
+            `/topics/${params.topicId}/reevaluate/`
+          );
+
+        } catch (error) {
+
+          console.log(
+            "Reevaluation skipped"
+          );
+
+        } finally {
+
+          setIsReevaluating(false);
+
+        }
+
+      };
   const fetchAnalytics = async () => {
 
     try {
@@ -54,7 +88,7 @@ export default function StudentTopicAnalyticsPage() {
       const response = await api.get(
         `/topics/${params.topicId}/student-analytics/`
       );
-
+      
       setTopicName(
         response.data.topic.name
       );
@@ -75,11 +109,49 @@ export default function StudentTopicAnalyticsPage() {
 
   };
 
+  // if (loading) {
+
+  //   return (
+  //     <div className="p-10">
+  //       Loading analytics...
+  //     </div>
+  //   );
+
+  // }
   if (loading) {
 
     return (
       <div className="p-10">
-        Loading analytics...
+
+        {isReevaluating ? (
+
+          <div>
+
+            <p className="font-semibold">
+
+              Re-evaluating pending answers...
+
+            </p>
+
+            <p className="mt-2 text-gray-500">
+
+              The system is checking previously pending AI evaluations.
+              Please wait.
+
+            </p>
+
+          </div>
+
+        ) : (
+
+          <p>
+
+            Loading analytics...
+
+          </p>
+
+        )}
+
       </div>
     );
 
@@ -344,10 +416,10 @@ export default function StudentTopicAnalyticsPage() {
       <div className="mt-10">
 
         <Link
-          href={`/courses/${params.id}/student-analytics`}
+          href={`/courses/${params.id}`}
           className="rounded border px-4 py-2"
         >
-          Back to Analytics
+          Back
         </Link>
 
       </div>

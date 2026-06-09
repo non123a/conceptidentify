@@ -85,7 +85,8 @@ const [savingGenerated, setSavingGenerated] =
 
   const [correctOption, setCorrectOption] =
     useState(0);
-
+  const [generateError, setGenerateError] =
+    useState("");
   const [creatingQuestion, setCreatingQuestion] =
     useState(false);
 
@@ -232,10 +233,25 @@ const [savingGenerated, setSavingGenerated] =
       response.data.questions
     );
 
-  } catch (error) {
+  } catch (error: any) {
 
-    console.error(error);
+    // console.error(error);
 
+    if (
+      error.response?.status === 503
+    ) {
+
+      setGenerateError(
+        "AI service is currently experiencing high traffic. Please try again in a few moments."
+      );
+
+      return;
+
+    }
+
+    setGenerateError(
+      "Question generation failed."
+    );
   } finally {
 
     setGeneratingAi(false);
@@ -883,7 +899,25 @@ const toggleQuestionSelection = (
       <h2 className="mb-6 text-2xl font-bold">
         Generated Questions
       </h2>
+      {generateError && (
 
+        <div className="mb-6 rounded-lg border border-red-300 bg-red-50 p-4">
+
+          <p className="font-semibold text-red-700">
+
+            AI service unavailable
+
+          </p>
+
+          <p className="mt-1 text-sm text-red-600">
+
+            {generateError}
+
+          </p>
+
+        </div>
+
+      )}
       {generatedQuestions.length > 0 && (
 
           <div className="text-gray-500">
