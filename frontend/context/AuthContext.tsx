@@ -42,7 +42,8 @@ type AuthContextType = {
     message: string;
   }>;
 
-  logout: () => void;
+  // logout: () => void;
+  logout: () => Promise<void>;
 };
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -66,12 +67,7 @@ export function AuthProvider({
     } catch (error: any) {
 
       setUser(null);
-      // if (
-      //   typeof window !== "undefined" &&
-      //   window.location.pathname !== "/login"
-      // ) {
-      //   window.location.href = "/login";
-      // }
+
       const publicRoutes = [
         "/login",
         "/register",
@@ -157,15 +153,38 @@ export function AuthProvider({
     };
   }
 };
-const logout = async () => {
+  // const logout = async () => {
 
-    try {
-      await api.post("/auth/logout/");
-    } catch (error) {
-      console.log("Logout failed", error);
-    }
-    setUser(null);
-  };
+  //   try {
+  //     await api.post("/auth/logout/");
+  //   } catch (error) {
+  //     console.log("Logout failed", error);
+  //   }
+  //   setUser(null);
+  // };
+  const logout = async () => {
+
+  try {
+
+    await api.post(
+      "/auth/logout/"
+    );
+
+  } catch (error) {
+
+    console.log(
+      "Logout failed",
+      error
+    );
+
+  }
+
+  setUser(null);
+
+  window.location.href =
+    "/login";
+
+};
 
 
   return (

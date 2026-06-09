@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import Navbar from "@/components/Navbar";
 // import GoogleProvider from "@/components/GoogleProvider";
 import GoogleProvider from "../components/GoogleProvider";
 
@@ -34,6 +35,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <GoogleProvider>
           <AuthProvider>
+            <Navbar />
             {children}
           </AuthProvider>
         </GoogleProvider>
