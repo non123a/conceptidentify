@@ -6,6 +6,7 @@ import RoleGuard from "@/components/RoleGuard";
 import { useParams } from "next/navigation";
 
 import api from "@/lib/api";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 type Topic = {
   id: number;
@@ -44,6 +45,12 @@ const [materialFile, setMaterialFile] =
 
 const [uploadingMaterial, setUploadingMaterial] =
   useState(false);
+const [deletingMaterialId, setDeletingMaterialId] =
+  useState<number | null>(null);
+const [deleteMaterialOpen, setDeleteMaterialOpen] =
+  useState(false);
+const [selectedMaterialId, setSelectedMaterialId] =
+  useState<number | null>(null);
    const [aiPrompt, setAiPrompt] =
   useState("");
 
@@ -62,6 +69,10 @@ const [selectedQuestions, setSelectedQuestions] =
   useState<number[]>([]);
 const [savingGenerated, setSavingGenerated] =
   useState(false);
+const [removeQuestionOpen, setRemoveQuestionOpen] =
+  useState(false);
+const [selectedGeneratedIndex, setSelectedGeneratedIndex] =
+  useState<number | null>(null);
 
   const [loading, setLoading] =
     useState(true);
@@ -396,25 +407,30 @@ const uploadMaterial = async () => {
 
   }
 };
-const deleteMaterial = async (
+const handleDeleteMaterialClick = (
   materialId: number
 ) => {
 
-  const confirmed = window.confirm(
-    "Delete this material?"
-  );
+  setSelectedMaterialId(materialId);
+  setDeleteMaterialOpen(true);
 
-  if (!confirmed) return;
+};
+
+const handleConfirmDeleteMaterial = async () => {
+
+  if (!selectedMaterialId) return;
 
   try {
 
+    setDeletingMaterialId(selectedMaterialId);
+
     await api.delete(
-      `/materials/${materialId}/delete/`
+      `/materials/${selectedMaterialId}/delete/`
     );
 
     setMaterials((prev) =>
       prev.filter(
-        (m) => m.id !== materialId
+        (m) => m.id !== selectedMaterialId
       )
     );
 
@@ -426,22 +442,47 @@ const deleteMaterial = async (
       "Failed to delete material"
     );
 
+  } finally {
+
+    setDeletingMaterialId(null);
+    setDeleteMaterialOpen(false);
+    setSelectedMaterialId(null);
+
   }
 };
-const removeGeneratedQuestion = (
+
+const handleRemoveGeneratedQuestionClick = (
   index: number
 ) => {
 
+  setSelectedGeneratedIndex(index);
+  setRemoveQuestionOpen(true);
+
+};
+
+const handleConfirmRemoveGeneratedQuestion = () => {
+
+  if (selectedGeneratedIndex === null) return;
+
   const updated =
     generatedQuestions.filter(
-      (_, i) => i !== index
+      (_, i) => i !== selectedGeneratedIndex
     );
 
   setGeneratedQuestions(updated);
 
   setSelectedQuestions((prev) =>
-    prev.filter((id) => id !== index)
+    prev
+      .filter((id) => id !== selectedGeneratedIndex)
+      .map((id) =>
+        id > selectedGeneratedIndex
+          ? id - 1
+          : id
+      )
   );
+
+  setRemoveQuestionOpen(false);
+  setSelectedGeneratedIndex(null);
 };
 const editGeneratedQuestion = (
   question: GeneratedQuestion
@@ -507,7 +548,7 @@ const toggleQuestionSelection = (
   if (loading) {
 
     return (
-      <div className="p-10">
+      <div className="ci-page">
         Loading...
       </div>
     );
@@ -516,7 +557,7 @@ const toggleQuestionSelection = (
   if (!topic) {
 
     return (
-      <div className="p-10 text-red-500">
+      <div className="ci-page text-red-600">
         Topic not found
       </div>
     );
@@ -524,11 +565,11 @@ const toggleQuestionSelection = (
 
   return (
     <RoleGuard allowedRole="lecturer">
-    <div className="p-10">
+    <div className="ci-page">
 
       <div className="mb-10">
 
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-3xl font-bold">
           Create Questions
         </h1>
 
@@ -574,7 +615,7 @@ const toggleQuestionSelection = (
       e.target.value
     )
   }
-  className="mb-3 w-full rounded border p-3"
+  className="mb-3 ci-input"
 />
 {materialFile && (
 
@@ -623,7 +664,7 @@ const toggleQuestionSelection = (
   <button
     onClick={uploadMaterial}
     disabled={uploadingMaterial}
-    className="rounded bg-black px-5 py-3 text-white"
+    className="ci-button-primary"
   >
 
     {uploadingMaterial
@@ -650,10 +691,10 @@ const toggleQuestionSelection = (
 
               <div
                 key={material.id}
-                className="rounded-xl border p-6 shadow-sm"
+                className="ci-card p-6"
               >
 
-                <h3 className="text-2xl font-semibold">
+                <h3 className="text-xl font-semibold">
                   {material.title}
                 </h3>
 
@@ -677,11 +718,20 @@ const toggleQuestionSelection = (
 
                   <button
                     onClick={() =>
-                      deleteMaterial(material.id)
+                      handleDeleteMaterialClick(
+                        material.id
+                      )
+                    }
+                    disabled={
+                      deletingMaterialId ===
+                      material.id
                     }
                     className="text-red-600 hover:underline"
                   >
-                    Delete
+                    {deletingMaterialId ===
+                    material.id
+                      ? "Deleting..."
+                      : "Delete"}
                   </button>
 
                 </div>
@@ -700,9 +750,9 @@ const toggleQuestionSelection = (
 
   {/* MIDDLE PANEL */}
   <div className="xl:col-span-1">
-    <div className="rounded-xl border p-6 shadow-sm">
+    <div className="ci-card p-6">
 
-        <h2 className="mb-6 text-2xl font-bold">
+        <h2 className="mb-6 text-xl font-bold">
 
             AI Question Generation
 
@@ -716,7 +766,7 @@ const toggleQuestionSelection = (
             onChange={(e) =>
                 setAiPrompt(e.target.value)
             }
-            className="w-full rounded border p-3"
+            className="ci-input"
             rows={4}
             />
 
@@ -760,7 +810,7 @@ const toggleQuestionSelection = (
             <button
             onClick={generateAiQuestions}
             disabled={generatingAi}
-            className="rounded bg-black px-6 py-3 text-white"
+            className="ci-button-primary"
             >
 
             {generatingAi
@@ -774,7 +824,7 @@ const toggleQuestionSelection = (
         </div>
         <div className="mt-6 rounded-xl border p-6 shadow-sm">
 
-          <h2 className="mb-6 text-2xl font-bold">
+          <h2 className="mb-6 text-xl font-bold">
 
             Manual Question Creation
 
@@ -788,7 +838,7 @@ const toggleQuestionSelection = (
               onChange={(e) =>
                 setQuestionText(e.target.value)
               }
-              className="w-full rounded border p-3"
+              className="ci-input"
               rows={4}
             />
 
@@ -797,7 +847,7 @@ const toggleQuestionSelection = (
               onChange={(e) =>
                 setQuestionType(e.target.value)
               }
-              className="w-full rounded border p-3"
+              className="ci-input"
             >
 
               <option value="open">
@@ -820,7 +870,7 @@ const toggleQuestionSelection = (
                     e.target.value
                   )
                 }
-                className="w-full rounded border p-3"
+                className="ci-input"
                 rows={4}
               />
 
@@ -863,7 +913,7 @@ const toggleQuestionSelection = (
                         setOptions(newOptions);
                         setCorrectOption(0);
                       }}
-                      className="w-full rounded border p-3"
+                      className="ci-input"
                     />
 
                   </div>
@@ -877,7 +927,7 @@ const toggleQuestionSelection = (
             <button
               onClick={createQuestion}
               disabled={creatingQuestion}
-              className="rounded bg-black px-6 py-3 text-white"
+              className="ci-button-primary"
             >
 
               {creatingQuestion
@@ -894,9 +944,9 @@ const toggleQuestionSelection = (
   {/* RIGHT PANEL */}
   <div className="xl:col-span-2">
     
-    <div className="rounded-xl border p-6 shadow-sm">
+    <div className="ci-card p-6">
 
-      <h2 className="mb-6 text-2xl font-bold">
+      <h2 className="mb-6 text-xl font-bold">
         Generated Questions
       </h2>
       {generateError && (
@@ -931,7 +981,7 @@ const toggleQuestionSelection = (
                 savingGenerated ||
                 selectedQuestions.length === 0
                 }
-                className="rounded bg-green-600 px-5 py-3 text-white"
+                className="ci-button-primary"
                 
               >
 
@@ -949,7 +999,7 @@ const toggleQuestionSelection = (
                     savingGenerated ||
                     generatedQuestions.length === 0
                   }
-                  className="rounded bg-blue-600 px-5 py-3 text-white"
+                  className="ci-button-primary"
                 >
                   Approve All
                 </button>
@@ -999,7 +1049,9 @@ const toggleQuestionSelection = (
 
             <button
               onClick={() =>
-                removeGeneratedQuestion(index)
+                handleRemoveGeneratedQuestionClick(
+                  index
+                )
               }
               className="rounded border px-3 py-1 text-sm text-red-600 hover:bg-red-50"
             >
@@ -1086,14 +1138,43 @@ const toggleQuestionSelection = (
   </div>
 
 </div>
+      <ConfirmDialog
+        open={deleteMaterialOpen}
+        title="Delete Material"
+        description="This material and its uploaded file reference will be removed from the topic."
+        confirmText="Delete"
+        cancelText="Cancel"
+        danger={true}
+        loading={
+          deletingMaterialId !== null
+        }
+        onConfirm={
+          handleConfirmDeleteMaterial
+        }
+        onCancel={() => {
+          setDeleteMaterialOpen(false);
+          setSelectedMaterialId(null);
+        }}
+      />
 
-
-
-
-
+      <ConfirmDialog
+        open={removeQuestionOpen}
+        title="Remove Generated Question"
+        description="This generated draft question will be removed from the review list."
+        confirmText="Remove"
+        cancelText="Cancel"
+        danger={true}
+        loading={false}
+        onConfirm={
+          handleConfirmRemoveGeneratedQuestion
+        }
+        onCancel={() => {
+          setRemoveQuestionOpen(false);
+          setSelectedGeneratedIndex(null);
+        }}
+      />
 
     </div>
   </RoleGuard>
   );
 }
-

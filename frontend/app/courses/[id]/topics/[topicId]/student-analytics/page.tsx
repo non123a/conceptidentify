@@ -112,7 +112,7 @@ export default function StudentTopicAnalyticsPage() {
   // if (loading) {
 
   //   return (
-  //     <div className="p-10">
+  //     <div className="ci-page">
   //       Loading analytics...
   //     </div>
   //   );
@@ -121,7 +121,7 @@ export default function StudentTopicAnalyticsPage() {
   if (loading) {
 
     return (
-      <div className="p-10">
+      <div className="ci-page">
 
         {isReevaluating ? (
 
@@ -160,7 +160,7 @@ export default function StudentTopicAnalyticsPage() {
   if (!analytics) {
 
     return (
-      <div className="p-10 text-red-500">
+      <div className="ci-page text-red-600">
         Analytics not available.
       </div>
     );
@@ -169,11 +169,11 @@ export default function StudentTopicAnalyticsPage() {
 
   return (
 
-    <div className="p-10">
+    <div className="ci-page">
 
       <div className="mb-10">
 
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-3xl font-bold">
 
           My Topic Performance
 
@@ -191,7 +191,7 @@ export default function StudentTopicAnalyticsPage() {
 
       <div className="grid gap-6 md:grid-cols-4">
 
-        <div className="rounded-xl border p-6 shadow-sm">
+        <div className="ci-card p-6">
 
           <h2 className="text-sm text-gray-500">
 
@@ -199,7 +199,7 @@ export default function StudentTopicAnalyticsPage() {
 
           </h2>
 
-          <p className="mt-3 text-4xl font-bold">
+          <p className="mt-3 text-3xl font-bold">
 
             {analytics.performance}%
 
@@ -207,7 +207,7 @@ export default function StudentTopicAnalyticsPage() {
 
         </div>
 
-        <div className="rounded-xl border p-6 shadow-sm">
+        <div className="ci-card p-6">
 
           <h2 className="text-sm text-gray-500">
 
@@ -215,7 +215,7 @@ export default function StudentTopicAnalyticsPage() {
 
           </h2>
 
-          <p className="mt-3 text-4xl font-bold">
+          <p className="mt-3 text-3xl font-bold">
 
             {analytics.completion_rate}%
 
@@ -223,7 +223,7 @@ export default function StudentTopicAnalyticsPage() {
 
         </div>
 
-        <div className="rounded-xl border p-6 shadow-sm">
+        <div className="ci-card p-6">
 
           <h2 className="text-sm text-gray-500">
 
@@ -231,7 +231,7 @@ export default function StudentTopicAnalyticsPage() {
 
           </h2>
 
-          <p className="mt-3 text-4xl font-bold text-green-600">
+          <p className="mt-3 text-3xl font-bold text-green-600">
 
             {analytics.correct_answers}
 
@@ -239,7 +239,7 @@ export default function StudentTopicAnalyticsPage() {
 
         </div>
 
-        <div className="rounded-xl border p-6 shadow-sm">
+        <div className="ci-card p-6">
 
           <h2 className="text-sm text-gray-500">
 
@@ -247,7 +247,7 @@ export default function StudentTopicAnalyticsPage() {
 
           </h2>
 
-          <p className="mt-3 text-4xl font-bold text-red-600">
+          <p className="mt-3 text-3xl font-bold text-red-600">
 
             {analytics.incorrect_answers}
 
@@ -261,7 +261,7 @@ export default function StudentTopicAnalyticsPage() {
 
       <div className="mt-10 rounded-xl border p-6 shadow-sm">
 
-        <h2 className="mb-6 text-2xl font-bold">
+        <h2 className="mb-6 text-xl font-bold">
 
           Questions To Review
 
@@ -308,7 +308,7 @@ export default function StudentTopicAnalyticsPage() {
 
       <div className="mt-10 rounded-xl border p-6 shadow-sm">
 
-        <h2 className="mb-6 text-2xl font-bold">
+        <h2 className="mb-6 text-xl font-bold">
 
           Question Breakdown
 
@@ -417,7 +417,7 @@ export default function StudentTopicAnalyticsPage() {
 
         <Link
           href={`/courses/${params.id}`}
-          className="rounded border px-4 py-2"
+          className="ci-button-secondary"
         >
           Back
         </Link>

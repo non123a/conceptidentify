@@ -9,7 +9,7 @@ export default function ProfilePage() {
   if (!user) {
 
     return (
-      <div className="p-10">
+      <div className="ci-page">
         Loading...
       </div>
     );
@@ -18,15 +18,15 @@ export default function ProfilePage() {
 
   return (
 
-    <div className="mx-auto max-w-3xl p-10">
+    <div className="ci-page-narrow">
 
-      <h1 className="mb-8 text-4xl font-bold">
+      <h1 className="mb-8 text-3xl font-bold">
 
         My Profile
 
       </h1>
 
-      <div className="rounded-xl border p-6 shadow-sm">
+      <div className="ci-card p-6">
 
         <div className="mb-5">
 

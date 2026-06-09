@@ -1,6 +1,6 @@
 export default function PerformancePage() {
   return (
-    <div className="p-10">
+    <div className="ci-page">
       Under Construction
     </div>
   );

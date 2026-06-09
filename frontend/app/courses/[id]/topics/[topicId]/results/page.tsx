@@ -130,7 +130,7 @@ export default function ResultsPage() {
 
   if (loading) {
     return (
-      <div className="p-10">
+      <div className="ci-page">
         <p className="text-gray-600">Loading results...</p>
       </div>
     );
@@ -142,7 +142,7 @@ export default function ResultsPage() {
 
   if (error && !resultsData) {
     return (
-      <div className="p-10">
+      <div className="ci-page">
         <p className="text-red-500 mb-4">{error}</p>
         <Link
           href={`/courses/${params.id}/topics/${params.topicId}`}
@@ -156,7 +156,7 @@ export default function ResultsPage() {
 
   if (!resultsData) {
     return (
-      <div className="p-10 text-red-500">Results not found</div>
+      <div className="ci-page text-red-600">Results not found</div>
     );
   }
 
@@ -169,13 +169,13 @@ export default function ResultsPage() {
 
   if (total_responses === 0) {
     return (
-      <div className="p-10 max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">{topic.name} - Results</h1>
-        <div className="p-6 bg-gray-50 rounded-lg border text-center">
+      <div className="ci-page-narrow">
+        <h1 className="text-3xl font-bold mb-8">{topic.name} - Results</h1>
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 text-center">
           <p className="text-gray-600 mb-6">No results available.</p>
           <Link
             href={`/courses/${params.id}/topics/${params.topicId}/quiz`}
-            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="ci-button-primary"
           >
             Take Quiz
           </Link>
@@ -189,27 +189,27 @@ export default function ResultsPage() {
   // ====================================
 
   return (
-    <div className="p-10 max-w-4xl mx-auto">
+    <div className="ci-page-narrow">
       {/* HEADER */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">{topic.name} - Results</h1>
+        <h1 className="text-3xl font-bold mb-2">{topic.name} - Results</h1>
         <p className="text-gray-600">View all your quiz responses</p>
       </div>
       {pending_count > 0 && (
 
-        <div className="mb-6 rounded-lg border border-yellow-300 bg-yellow-50 p-4">
+        <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4">
 
           <div className="flex items-center justify-between">
 
             <div>
 
-              <p className="font-semibold text-yellow-800">
+              <p className="font-semibold text-amber-800">
 
                 Pending Evaluation
 
               </p>
 
-              <p className="text-sm text-yellow-700">
+              <p className="text-sm text-amber-700">
 
                 {pending_count} answer(s) are still waiting for AI evaluation.
 
@@ -219,7 +219,7 @@ export default function ResultsPage() {
 
             <button
               onClick={reevaluatePending}
-              className="rounded bg-yellow-600 px-4 py-2 text-white"
+              className="ci-button-warning"
             >
               Re-Evaluate
             </button>
@@ -232,7 +232,7 @@ export default function ResultsPage() {
       {/* SUMMARY CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         {/* Total Responses */}
-        <div className="p-6 border rounded-lg bg-white shadow-sm">
+        <div className="ci-card p-6">
           <p className="text-sm text-gray-600 mb-2">Total Responses</p>
           <p className="text-3xl font-bold text-gray-800">
             {total_responses}
@@ -240,7 +240,7 @@ export default function ResultsPage() {
         </div>
 
         {/* Average Score */}
-        <div className="p-6 border rounded-lg bg-white shadow-sm">
+        <div className="ci-card p-6">
           <p className="text-sm text-gray-600 mb-2">Average Score</p>
           <p className="text-3xl font-bold text-blue-600">
             {(average_score * 100).toFixed(1)}%
@@ -248,7 +248,7 @@ export default function ResultsPage() {
         </div>
 
         {/* Total Score */}
-        <div className="p-6 border rounded-lg bg-white shadow-sm">
+        <div className="ci-card p-6">
           <p className="text-sm text-gray-600 mb-2">Total Score</p>
           <p className="text-3xl font-bold text-gray-800">
             {total_score.toFixed(2)}
@@ -258,7 +258,7 @@ export default function ResultsPage() {
 
       {/* ERROR ALERT */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded text-red-700">
+        <div className="ci-alert border-red-200 bg-red-50 text-red-700 mb-6">
           {error}
         </div>
       )}
@@ -268,7 +268,7 @@ export default function ResultsPage() {
         {results.map((result, index) => (
           <div
             key={result.id}
-            className="border rounded-lg p-6 bg-white shadow-sm"
+            className="ci-card p-6"
           >
             {/* QUESTION INFO */}
             <div className="mb-4">
@@ -278,7 +278,7 @@ export default function ResultsPage() {
                 </p>
                 {result.feedback === "Evaluating..." ? (
 
-                  <p className="text-sm font-semibold text-yellow-600">
+                  <p className="text-sm font-semibold text-amber-600">
 
                     ⏳ Pending Evaluation
 
@@ -339,13 +339,13 @@ export default function ResultsPage() {
       <div className="mt-10 flex gap-4">
         <Link
           href={`/courses/${params.id}/topics/${params.topicId}/quiz`}
-          className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 text-center"
+          className="ci-button-primary flex-1 text-center"
         >
           Diagnostic Quiz
         </Link>
         <Link
           href={`/courses/${params.id}/topics/${params.topicId}`}
-          className="px-6 py-3 border rounded-lg font-semibold hover:bg-gray-50"
+          className="ci-button-secondary"
         >
           Back to Topic
         </Link>

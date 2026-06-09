@@ -41,7 +41,7 @@ export default function UploadPage() {
 
   return (
     <RoleGuard allowedRole="lecturer">
-    <div className="p-10">
+    <div className="ci-page">
       <h1 className="mb-6 text-3xl font-bold">
         Upload Material
       </h1>
@@ -53,7 +53,7 @@ export default function UploadPage() {
         <input
           type="text"
           placeholder="Material Title"
-          className="w-full rounded border p-3"
+          className="ci-input"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
@@ -61,7 +61,7 @@ export default function UploadPage() {
         <input
           type="number"
           placeholder="Topic ID"
-          className="w-full rounded border p-3"
+          className="ci-input"
           value={topicId}
           onChange={(e) => setTopicId(e.target.value)}
         />
@@ -78,7 +78,7 @@ export default function UploadPage() {
 
         <button
           type="submit"
-          className="rounded bg-black px-6 py-3 text-white"
+          className="ci-button-primary"
         >
           Upload
         </button>

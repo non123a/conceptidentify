@@ -147,7 +147,7 @@ export default function PracticePage() {
 
   if (loading) {
     return (
-      <div className="p-10">
+      <div className="ci-page">
         <p className="text-gray-600">
           Loading practice questions...
         </p>
@@ -157,7 +157,7 @@ export default function PracticePage() {
 
   if (error && !practiceData) {
     return (
-      <div className="p-10">
+      <div className="ci-page">
         <p className="text-red-500 mb-4">{error}</p>
         <Link
           href={`/courses/${params.id}/topics/${params.topicId}`}
@@ -171,7 +171,7 @@ export default function PracticePage() {
 
   if (!practiceData) {
     return (
-      <div className="p-10 text-red-500">
+      <div className="ci-page text-red-600">
         Practice questions not found
       </div>
     );
@@ -181,9 +181,9 @@ export default function PracticePage() {
 
   if (results) {
     return (
-      <div className="p-10 max-w-4xl mx-auto">
+      <div className="ci-page-narrow">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">
+          <h1 className="text-3xl font-bold mb-2">
             {topic.name} - Practice Results
           </h1>
           <p className="text-gray-600">
@@ -192,7 +192,7 @@ export default function PracticePage() {
         </div>
 
         {results.length === 0 ? (
-          <div className="p-6 bg-gray-50 rounded-lg border">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
             <p className="text-gray-600">
               No practice answers were evaluated.
             </p>
@@ -202,7 +202,7 @@ export default function PracticePage() {
             {results.map((result, index) => (
               <div
                 key={`${result.question}-${index}`}
-                className="border rounded-lg p-6 bg-white shadow-sm"
+                className="ci-card p-6"
               >
                 <div className="mb-4 flex justify-between gap-4">
                   <p className="text-sm text-gray-500">
@@ -248,13 +248,13 @@ export default function PracticePage() {
               setResults(null);
               setAnswers({});
             }}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+            className="ci-button-primary"
           >
             Practice Again
           </button>
           <Link
             href={`/courses/${params.id}/topics/${params.topicId}`}
-            className="px-6 py-3 border rounded-lg font-semibold hover:bg-gray-50"
+            className="ci-button-secondary"
           >
             Back to Topic
           </Link>
@@ -265,17 +265,17 @@ export default function PracticePage() {
 
   if (questions.length === 0) {
     return (
-      <div className="p-10 max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6">
+      <div className="ci-page-narrow">
+        <h1 className="text-3xl font-bold mb-6">
           {topic.name} - Practice Questions
         </h1>
-        <div className="p-6 bg-gray-50 rounded-lg border">
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
           <p className="text-gray-600 mb-6">
             No practice questions are available yet.
           </p>
           <Link
             href={`/courses/${params.id}/topics/${params.topicId}`}
-            className="inline-block px-6 py-3 border rounded-lg font-semibold hover:bg-gray-50"
+            className="ci-button-secondary"
           >
             Back to Topic
           </Link>
@@ -285,9 +285,9 @@ export default function PracticePage() {
   }
 
   return (
-    <div className="p-10 max-w-4xl mx-auto">
+    <div className="ci-page-narrow">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">
+        <h1 className="text-3xl font-bold mb-2">
           {topic.name} - Practice Questions
         </h1>
         <p className="text-gray-600">
@@ -296,7 +296,7 @@ export default function PracticePage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded text-red-700">
+        <div className="ci-alert border-red-200 bg-red-50 text-red-700 mb-6">
           {error}
         </div>
       )}
@@ -306,7 +306,7 @@ export default function PracticePage() {
           {questions.map((question, index) => (
             <div
               key={question.id}
-              className="border rounded-lg p-6 bg-white shadow-sm"
+              className="ci-card p-6"
             >
               <div className="mb-4">
                 <p className="text-sm text-gray-500">
@@ -367,14 +367,14 @@ export default function PracticePage() {
           <button
             type="submit"
             disabled={submitting}
-            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="ci-button-primary flex-1 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {submitting ? "Submitting..." : "Submit Practice"}
           </button>
 
           <Link
             href={`/courses/${params.id}/topics/${params.topicId}`}
-            className="px-6 py-3 border rounded-lg font-semibold hover:bg-gray-50"
+            className="ci-button-secondary"
           >
             Cancel
           </Link>

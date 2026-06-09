@@ -105,7 +105,7 @@ export default function AnalyticsPage() {
   if (loading) {
 
     return (
-      <div className="p-10">
+      <div className="ci-page">
         Loading analytics...
       </div>
     );
@@ -118,11 +118,11 @@ export default function AnalyticsPage() {
 
   return (
 
-    <div className="p-10">
+    <div className="ci-page">
 
       {/* Header */}
 
-      <h1 className="text-4xl font-bold">
+      <h1 className="text-3xl font-bold">
         {courseName} - Class Learning Analysis
       </h1>
 
@@ -135,7 +135,7 @@ export default function AnalyticsPage() {
 
       <div className="mt-8 rounded-xl border p-6">
 
-        <h2 className="mb-4 text-2xl font-bold">
+        <h2 className="mb-4 text-xl font-bold">
           ⚠ Topics Requiring Attention
         </h2>
 
@@ -208,7 +208,7 @@ export default function AnalyticsPage() {
             Weak Topics
           </h3>
 
-          <p className="mt-2 text-4xl font-bold text-red-600">
+          <p className="mt-2 text-3xl font-bold text-red-600">
             {weakTopics.length}
           </p>
 
@@ -220,7 +220,7 @@ export default function AnalyticsPage() {
             Students Needing Help
           </h3>
 
-          <p className="mt-2 text-4xl font-bold text-yellow-600">
+          <p className="mt-2 text-3xl font-bold text-amber-600">
             {studentsNeedingHelp.length}
           </p>
 
@@ -232,7 +232,7 @@ export default function AnalyticsPage() {
 
       <div className="mt-8 rounded-xl border p-6">
 
-        <h2 className="mb-4 text-2xl font-bold">
+        <h2 className="mb-4 text-xl font-bold">
           Topic Participation
         </h2>
 
@@ -327,7 +327,7 @@ export default function AnalyticsPage() {
 
     <div className="mt-8 rounded-xl border p-6">
 
-    <h2 className="mb-6 text-2xl font-bold">
+    <h2 className="mb-6 text-xl font-bold">
         Topic Performance Overview
     </h2>
 
@@ -380,7 +380,7 @@ export default function AnalyticsPage() {
 
       <div className="mt-8 rounded-xl border p-6">
 
-        <h2 className="mb-4 text-2xl font-bold">
+        <h2 className="mb-4 text-xl font-bold">
           👥 Students Needing Help
         </h2>
 

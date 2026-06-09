@@ -69,11 +69,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA] px-6 py-12">
 
-      <div className="w-full max-w-md rounded bg-white p-8 shadow">
+      <div className="ci-card w-full max-w-md p-8">
 
-        <h1 className="mb-6 text-2xl font-bold">
+        <h1 className="mb-6 text-xl font-bold">
           Login
         </h1>
 
@@ -87,7 +87,7 @@ export default function LoginPage() {
         <input
           type="text"
           placeholder="Username"
-          className="mb-4 w-full rounded border p-3"
+          className="mb-4 ci-input"
           value={username}
           onChange={(e) =>
             setUsername(e.target.value)
@@ -97,7 +97,7 @@ export default function LoginPage() {
         <input
           type="password"
           placeholder="Password"
-          className="mb-4 w-full rounded border p-3"
+          className="mb-4 ci-input"
           value={password}
           onChange={(e) =>
             setPassword(e.target.value)
@@ -106,14 +106,14 @@ export default function LoginPage() {
 
         {/* <button
           onClick={handleLogin}
-          className="w-full rounded bg-black p-3 text-white"
+          className="ci-button-primary w-full"
         >
           Login
           
         </button> */}
         <button
           onClick={handleLogin}
-          className="w-full rounded bg-black p-3 text-white"
+          className="ci-button-primary w-full"
         >
           Login
         </button>

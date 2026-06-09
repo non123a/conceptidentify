@@ -118,7 +118,7 @@ const fetchPage = async () => {
   if (loading) {
 
     return (
-      <div className="p-10">
+      <div className="ci-page">
         Loading analytics...
       </div>
     );
@@ -127,7 +127,7 @@ const fetchPage = async () => {
   if (!topic) {
 
     return (
-      <div className="p-10 text-red-500">
+      <div className="ci-page text-red-600">
         Topic not found
       </div>
     );
@@ -135,11 +135,11 @@ const fetchPage = async () => {
 
   return (
     <RoleGuard allowedRole="lecturer">
-<div className="p-10">
+<div className="ci-page">
 
   <div className="mb-10">
 
-    <h1 className="text-4xl font-bold">
+    <h1 className="text-3xl font-bold">
       Topic Analytics
     </h1>
 
@@ -153,49 +153,49 @@ const fetchPage = async () => {
 
   <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
 
-    <div className="rounded-xl border p-6">
+    <div className="ci-card p-6">
 
       <h2 className="text-lg font-semibold">
         Performance
       </h2>
 
-      <p className="mt-4 text-4xl font-bold">
+      <p className="mt-4 text-3xl font-bold">
         {analytics?.performance}%
       </p>
 
     </div>
 
-    <div className="rounded-xl border p-6">
+    <div className="ci-card p-6">
 
       <h2 className="text-lg font-semibold">
         Completion Rate
       </h2>
 
-      <p className="mt-4 text-4xl font-bold">
+      <p className="mt-4 text-3xl font-bold">
         {analytics?.completion_rate}%
       </p>
 
     </div>
 
-    <div className="rounded-xl border p-6">
+    <div className="ci-card p-6">
 
       <h2 className="text-lg font-semibold">
         Students Struggling
       </h2>
 
-      <p className="mt-4 text-4xl font-bold">
+      <p className="mt-4 text-3xl font-bold">
         {analytics?.students_struggling}
       </p>
 
     </div>
 
-    <div className="rounded-xl border p-6">
+    <div className="ci-card p-6">
 
       <h2 className="text-lg font-semibold">
         Weak Questions
       </h2>
 
-      <p className="mt-4 text-4xl font-bold">
+      <p className="mt-4 text-3xl font-bold">
         {analytics?.weak_questions.length}
       </p>
 
@@ -207,7 +207,7 @@ const fetchPage = async () => {
 
   <div className="mt-10 rounded-xl border p-6">
 
-    <h2 className="mb-6 text-2xl font-bold">
+    <h2 className="mb-6 text-xl font-bold">
 
       Student Distribution
 
@@ -271,7 +271,7 @@ const fetchPage = async () => {
 
   <div className="mt-10 rounded-xl border p-6">
 
-    <h2 className="mb-6 text-2xl font-bold">
+    <h2 className="mb-6 text-xl font-bold">
 
       Students Needing Help
 
@@ -320,7 +320,7 @@ const fetchPage = async () => {
 
   <div className="mt-10 rounded-xl border p-6">
 
-    <h2 className="mb-6 text-2xl font-bold">
+    <h2 className="mb-6 text-xl font-bold">
 
       Question Performance
 

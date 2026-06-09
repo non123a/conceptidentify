@@ -139,7 +139,7 @@ export default function TopicPage() {
   if (loading) {
 
     return (
-      <div className="p-10">
+      <div className="ci-page">
         Loading topic...
       </div>
     );
@@ -148,16 +148,16 @@ export default function TopicPage() {
   if (!topic) {
 
     return (
-      <div className="p-10 text-red-500">
+      <div className="ci-page text-red-600">
         Topic not found
       </div>
     );
   }
 
   return (
-    <div className="p-10">
+    <div className="ci-page">
 
-      <h1 className="text-4xl font-bold">
+      <h1 className="text-3xl font-bold">
         {topic.name}
       </h1>
 
@@ -173,21 +173,21 @@ export default function TopicPage() {
 
             <Link
               href={`/courses/${params.id}/topics/${params.topicId}/create`}
-              className="rounded-lg border bg-black px-4 py-3 text-center text-sm font-medium text-white transition hover:opacity-90"
+              className="ci-button-primary text-center"
             >
               Create Questions
             </Link>
 
             <Link
               href={`/courses/${params.id}/topics/${params.topicId}/questions`}
-              className="rounded-lg border px-4 py-3 text-center text-sm font-medium transition hover:bg-gray-50"
+              className="ci-button-secondary text-center"
             >
               Question Bank
             </Link>
 
             <Link
               href={`/courses/${params.id}/topics/${params.topicId}/analytics`}
-              className="rounded-lg border px-4 py-3 text-center text-sm font-medium transition hover:bg-gray-50"
+              className="ci-button-secondary text-center"
             >
               Analytics
             </Link>
@@ -197,7 +197,7 @@ export default function TopicPage() {
         ) : (
 
           <div>
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-xl font-bold">
               Student Questions
             </h2>
             <p className="mt-3 text-gray-600">
@@ -222,7 +222,7 @@ export default function TopicPage() {
 
               <Link
                 href={`/courses/${params.id}/topics/${params.topicId}/practice`}
-                className="rounded-lg border px-6 py-2 font-semibold hover:bg-gray-50"
+                className="ci-button-secondary"
               >
                 Practice Questions
                 {diagnosticStatus.practiceCount > 0
@@ -232,7 +232,7 @@ export default function TopicPage() {
 
               <Link
                 href={`/courses/${params.id}/topics/${params.topicId}/results`}
-                className="rounded-lg border px-6 py-2 font-semibold hover:bg-gray-50"
+                className="ci-button-secondary"
               >
                 View Diagnostic History
               </Link>

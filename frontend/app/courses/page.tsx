@@ -56,14 +56,14 @@ export default function CoursesPage() {
   if (loading) {
 
     return (
-      <div className="p-10">
+      <div className="ci-page">
         Loading courses...
       </div>
     );
   }
 
   return (
-    <div className="p-10">
+    <div className="ci-page">
 
       <h1 className="mb-8 text-3xl font-bold">
         My Courses
@@ -75,10 +75,10 @@ export default function CoursesPage() {
 
           <div
             key={course.id}
-            className="rounded-lg border p-6 shadow-sm"
+            className="ci-card p-6"
           >
 
-            <h2 className="text-2xl font-semibold">
+            <h2 className="text-xl font-semibold">
               {course.name}
             </h2>
 

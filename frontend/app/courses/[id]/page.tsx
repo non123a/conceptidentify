@@ -155,7 +155,7 @@ const [topicDescription, setTopicDescription] =
   if (loading) {
 
     return (
-      <div className="p-10">
+      <div className="ci-page">
         Loading course...
       </div>
     );
@@ -164,18 +164,18 @@ const [topicDescription, setTopicDescription] =
   if (!course) {
 
     return (
-      <div className="p-10 text-red-500">
+      <div className="ci-page text-red-600">
         Course not found
       </div>
     );
   }
 
   return (
-    <div className="p-10">
+    <div className="ci-page">
 
   <div className="mb-10">
 
-    <h1 className="text-4xl font-bold">
+    <h1 className="text-3xl font-bold">
       {course.name}
     </h1>
 
@@ -208,7 +208,7 @@ const [topicDescription, setTopicDescription] =
 
     <div className="mb-8 rounded-xl border p-6 shadow-sm">
 
-      <h2 className="mb-4 text-2xl font-bold">
+      <h2 className="mb-4 text-xl font-bold">
 
         My Learning Progress
 
@@ -279,7 +279,7 @@ const [topicDescription, setTopicDescription] =
 
                   ) : topic.performance < 70 ? (
 
-                    <span className="text-yellow-600">
+                    <span className="text-amber-600">
 
                       ⚠ Needs Improvement
 
@@ -323,27 +323,27 @@ const [topicDescription, setTopicDescription] =
     {user?.role === "lecturer" && (
       <Link
         href={`/courses/${params.id}/analytics`}
-        className="rounded-lg bg-black px-4 py-2 text-white"
+        className="ci-button-primary"
       >
         Class Analytics
       </Link>
     )}
 
-    {user?.role === "student" && (
+    {/* {user?.role === "student" && (
       <Link
         href={`/courses/${params.id}/student-analytics`}
-        className="rounded-lg bg-black px-4 py-2 text-white"
+        className="ci-button-primary"
       >
         My Analytics
       </Link>
-    )}
+    )} */}
 
     {user?.role === "lecturer" && (
       <button
         onClick={() =>
           setShowCreateTopicModal(true)
         }
-        className="rounded bg-black px-4 py-2 text-white"
+        className="ci-button-primary"
       >
         + Create Topic
       </button>
@@ -368,9 +368,9 @@ const [topicDescription, setTopicDescription] =
 
         <div
           key={topic.id}
-          className="rounded-xl border p-6 shadow-sm transition hover:shadow-md">
+          className="ci-card ci-card-hover p-6 transition">
 
-          <h3 className="text-2xl font-semibold">
+          <h3 className="text-xl font-semibold">
             {topic.name}
           </h3>
 
@@ -396,7 +396,7 @@ const [topicDescription, setTopicDescription] =
 
                 <Link
                     href={`/courses/${params.id}/topics/${topic.id}/create`}
-                    className="rounded-lg border bg-black px-4 py-3 text-center text-sm font-medium text-white transition hover:opacity-90"
+                    className="ci-button-primary text-center"
                 >
 
                     Create Questions
@@ -405,7 +405,7 @@ const [topicDescription, setTopicDescription] =
 
                 <Link
                     href={`/courses/${params.id}/topics/${topic.id}/questions`}
-                    className="rounded-lg border px-4 py-3 text-center text-sm font-medium transition hover:bg-gray-50"
+                    className="ci-button-secondary text-center"
                 >
 
                     Question Bank
@@ -414,7 +414,7 @@ const [topicDescription, setTopicDescription] =
 
                 <Link
                     href={`/courses/${params.id}/topics/${topic.id}/analytics`}
-                    className="rounded-lg border px-4 py-3 text-center text-sm font-medium transition hover:bg-gray-50"
+                    className="ci-button-secondary text-center"
                 >
 
                     Analytics
@@ -425,14 +425,14 @@ const [topicDescription, setTopicDescription] =
               ) : (
                 <><Link
                   href={`/courses/${params.id}/topics/${topic.id}`}
-                  className="rounded-lg border bg-black px-4 py-3 text-center text-sm font-medium text-white transition hover:opacity-90"
+                  className="ci-button-primary text-center"
                 >
 
                   Answer Questions
 
                 </Link><Link
                   href={`/courses/${params.id}/topics/${topic.id}/student-analytics`}
-                  className="rounded-lg border px-4 py-3 text-center text-sm font-medium"
+                  className="ci-button-secondary text-center"
                 >
                     My Performance
                   </Link></>
@@ -451,9 +451,9 @@ const [topicDescription, setTopicDescription] =
 </div>
 {showCreateTopicModal && (
 
-  <div className="fixed inset-0 flex items-center justify-center bg-black/50">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-6">
 
-    <div className="w-full max-w-md rounded bg-white p-6">
+    <div className="ci-card w-full max-w-md p-6">
 
       <h2 className="mb-4 text-xl font-bold">
         Create Topic
@@ -461,7 +461,7 @@ const [topicDescription, setTopicDescription] =
 
       <input
         placeholder="Topic Name"
-        className="mb-3 w-full rounded border p-3"
+        className="mb-3 ci-input"
         value={topicName}
         onChange={(e) =>
           setTopicName(e.target.value)
@@ -470,7 +470,7 @@ const [topicDescription, setTopicDescription] =
 
       <textarea
         placeholder="Description"
-        className="mb-4 w-full rounded border p-3"
+        className="mb-4 ci-input"
         value={topicDescription}
         onChange={(e) =>
           setTopicDescription(
@@ -485,14 +485,14 @@ const [topicDescription, setTopicDescription] =
           onClick={() =>
             setShowCreateTopicModal(false)
           }
-          className="rounded border px-4 py-2"
+          className="ci-button-secondary"
         >
           Cancel
         </button>
 
         <button
           onClick={createTopic}
-          className="rounded bg-black px-4 py-2 text-white"
+          className="ci-button-primary"
         >
           Create
         </button>

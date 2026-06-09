@@ -6,6 +6,7 @@ import RoleGuard from "@/components/RoleGuard";
 import { useParams } from "next/navigation";
 
 import api from "@/lib/api";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 type Choice = {
   id: number;
@@ -47,6 +48,12 @@ export default function QuestionsPage() {
     useState<number | null>(null);
 
   const [deletingQuestionId, setDeletingQuestionId] =
+    useState<number | null>(null);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] =
+    useState(false);
+
+  const [selectedQuestionId, setSelectedQuestionId] =
     useState<number | null>(null);
 
   const [editingQuestionId, setEditingQuestionId] =
@@ -146,22 +153,31 @@ export default function QuestionsPage() {
     }
   };
 
-  const deleteQuestion = async (
+  const handleDeleteQuestionClick = (
     questionId: number
   ) => {
 
+    setSelectedQuestionId(questionId);
+    setDeleteConfirmOpen(true);
+
+  };
+
+  const handleConfirmDeleteQuestion = async () => {
+
+    if (!selectedQuestionId) return;
+
     try {
 
-      setDeletingQuestionId(questionId);
+      setDeletingQuestionId(selectedQuestionId);
 
       await api.delete(
-        `/questions/${questionId}/delete/`
+        `/questions/${selectedQuestionId}/delete/`
       );
 
       setQuestions((currentQuestions) =>
         currentQuestions.filter(
           (question) =>
-            question.id !== questionId
+            question.id !== selectedQuestionId
         )
       );
 
@@ -172,6 +188,8 @@ export default function QuestionsPage() {
     } finally {
 
       setDeletingQuestionId(null);
+      setDeleteConfirmOpen(false);
+      setSelectedQuestionId(null);
 
     }
   };
@@ -253,7 +271,7 @@ export default function QuestionsPage() {
 
     return (
       <RoleGuard allowedRole="lecturer">
-      <div className="p-10">
+      <div className="ci-page">
         Loading questions...
       </div>
       </RoleGuard>
@@ -264,7 +282,7 @@ export default function QuestionsPage() {
 
     return (
       <RoleGuard allowedRole="lecturer">
-      <div className="p-10 text-red-500">
+      <div className="ci-page text-red-600">
         Topic not found
       </div>
       </RoleGuard>
@@ -273,11 +291,11 @@ export default function QuestionsPage() {
 
   return (
     <RoleGuard allowedRole="lecturer">
-    <div className="p-10">
+    <div className="ci-page">
 
       <div className="mb-10">
 
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-3xl font-bold">
           Question Bank
         </h1>
 
@@ -305,7 +323,7 @@ export default function QuestionsPage() {
 
             <div
               key={question.id}
-              className="rounded-xl border p-6 shadow-sm"
+              className="ci-card p-6"
             >
 
               <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -320,7 +338,7 @@ export default function QuestionsPage() {
                   className={`rounded px-3 py-1 text-sm ${
                     question.is_approved
                       ? "bg-green-100 text-green-700"
-                      : "bg-yellow-100 text-yellow-700"
+                      : "bg-amber-100 text-amber-700"
                   }`}
                 >
 
@@ -347,7 +365,7 @@ export default function QuestionsPage() {
                     togglingQuestionId ===
                     question.id
                   }
-                  className="rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
+                  className="ci-button-primary min-h-0 px-3 py-1 text-sm disabled:opacity-50"
                 >
 
                   {togglingQuestionId ===
@@ -374,13 +392,15 @@ export default function QuestionsPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    deleteQuestion(question.id)
+                    handleDeleteQuestionClick(
+                      question.id
+                    )
                   }
                   disabled={
                     deletingQuestionId ===
                     question.id
                   }
-                  className="rounded bg-red-600 px-3 py-1 text-sm text-white disabled:opacity-50"
+                  className="ci-button-danger min-h-0 px-3 py-1 text-sm disabled:opacity-50"
                 >
 
                   {deletingQuestionId ===
@@ -404,7 +424,7 @@ export default function QuestionsPage() {
                         event.target.value
                       )
                     }
-                    className="w-full rounded border p-3"
+                    className="ci-input"
                     rows={4}
                   />
 
@@ -418,7 +438,7 @@ export default function QuestionsPage() {
                           event.target.value
                         )
                       }
-                      className="w-full rounded border p-3"
+                      className="ci-input"
                       rows={4}
                     />
 
@@ -465,7 +485,7 @@ export default function QuestionsPage() {
                                   nextChoices
                                 );
                               }}
-                              className="w-full rounded border p-3"
+                              className="ci-input"
                             />
 
                           </div>
@@ -490,7 +510,7 @@ export default function QuestionsPage() {
                         savingQuestionId ===
                         question.id
                       }
-                      className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+                      className="ci-button-primary min-h-0 px-4 py-2 text-sm disabled:opacity-50"
                     >
 
                       {savingQuestionId ===
@@ -503,7 +523,7 @@ export default function QuestionsPage() {
                     <button
                       type="button"
                       onClick={cancelEditQuestion}
-                      className="rounded border px-4 py-2 text-sm"
+                      className="ci-button-secondary min-h-0 px-4 py-2 text-sm"
                     >
 
                       Cancel
@@ -580,6 +600,25 @@ export default function QuestionsPage() {
         </div>
 
       )}
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        title="Delete Question"
+        description="This question will be permanently removed from the topic question bank."
+        confirmText="Delete"
+        cancelText="Cancel"
+        danger={true}
+        loading={
+          deletingQuestionId !== null
+        }
+        onConfirm={
+          handleConfirmDeleteQuestion
+        }
+        onCancel={() => {
+          setDeleteConfirmOpen(false);
+          setSelectedQuestionId(null);
+        }}
+      />
 
     </div>
     </RoleGuard>

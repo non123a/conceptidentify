@@ -93,11 +93,11 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA] px-6 py-12">
 
-      <div className="w-full max-w-md rounded bg-white p-8 shadow">
+      <div className="ci-card w-full max-w-md p-8">
 
-        <h1 className="mb-6 text-2xl font-bold">
+        <h1 className="mb-6 text-xl font-bold">
           Register
         </h1>
 
@@ -115,7 +115,7 @@ export default function RegisterPage() {
 
         <input
           placeholder="Username"
-          className="mb-3 w-full rounded border p-3"
+          className="mb-3 ci-input"
           value={form.username}
           onChange={(e) =>
             setForm({
@@ -127,7 +127,7 @@ export default function RegisterPage() {
 
         <input
           placeholder="Email"
-          className="mb-3 w-full rounded border p-3"
+          className="mb-3 ci-input"
           value={form.email}
           onChange={(e) =>
             setForm({
@@ -139,7 +139,7 @@ export default function RegisterPage() {
 
         <input
           placeholder="First Name"
-          className="mb-3 w-full rounded border p-3"
+          className="mb-3 ci-input"
           value={form.first_name}
           onChange={(e) =>
             setForm({
@@ -151,7 +151,7 @@ export default function RegisterPage() {
 
         <input
           placeholder="Last Name"
-          className="mb-3 w-full rounded border p-3"
+          className="mb-3 ci-input"
           value={form.last_name}
           onChange={(e) =>
             setForm({
@@ -162,7 +162,7 @@ export default function RegisterPage() {
         />
 
         <select
-          className="mb-3 w-full rounded border p-3"
+          className="mb-3 ci-input"
           value={form.role}
           onChange={(e) =>
             setForm({
@@ -186,7 +186,7 @@ export default function RegisterPage() {
         <input
           type="password"
           placeholder="Password"
-          className="mb-3 w-full rounded border p-3"
+          className="mb-3 ci-input"
           value={form.password}
           onChange={(e) =>
             setForm({
@@ -199,7 +199,7 @@ export default function RegisterPage() {
         <input
           type="password"
           placeholder="Confirm Password"
-          className="mb-6 w-full rounded border p-3"
+          className="mb-6 ci-input"
           value={form.confirm_password}
           onChange={(e) =>
             setForm({
@@ -211,7 +211,7 @@ export default function RegisterPage() {
 
         <button
           onClick={handleRegister}
-          className="w-full rounded bg-black p-3 text-white"
+          className="ci-button-primary w-full"
         >
           Register
         </button>

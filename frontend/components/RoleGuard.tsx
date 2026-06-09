@@ -34,7 +34,7 @@ useEffect(() => {
 // }
 if (loading) {
   return (
-    <div className="p-10">
+    <div className="ci-page">
       Loading...
     </div>
   );
@@ -42,7 +42,7 @@ if (loading) {
 
 if (!user || user.role !== allowedRole) {
   return (
-    <div className="p-10">
+    <div className="ci-page">
       Redirecting...
     </div>
   );

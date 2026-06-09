@@ -138,7 +138,7 @@ const joinCourse = async () => {
 };
   if (loading) {
     return (
-      <div className="p-10">
+      <div className="ci-page">
         Loading...
       </div>
     );
@@ -147,20 +147,20 @@ const joinCourse = async () => {
   if (!user) {
     console.log("Dashboard: user is null");
     return (
-      <div className="p-10 text-red-500">
+      <div className="ci-page text-red-600">
         Not logged in
       </div>
     );
   }
 
   return (
-    <div className="p-10">
+    <div className="ci-page">
 
       <h1 className="mb-6 text-3xl font-bold">
         Dashboard
       </h1>
 
-      <div className="rounded border p-6">
+      <div className="ci-card p-6">
 
         <p>
           <strong>Name:</strong>{" "}
@@ -193,7 +193,7 @@ const joinCourse = async () => {
               onClick={() =>
                 setShowCreateModal(true)
               }
-              className="rounded bg-black px-4 py-2 text-white"
+              className="ci-button-primary"
             >
               + Create Course
             </button>
@@ -206,7 +206,7 @@ const joinCourse = async () => {
               onClick={() =>
                 setShowJoinModal(true)
               }
-              className="rounded bg-black px-4 py-2 text-white"
+              className="ci-button-primary"
             >
               + Join Course
             </button>
@@ -232,10 +232,10 @@ const joinCourse = async () => {
               <Link
                 key={course.id}
                 href={`/courses/${course.id}`}
-                className="rounded-xl border p-6 shadow-sm transition hover:shadow-md"
+                className="ci-card ci-card-hover p-6 transition"
               >
 
-                <h3 className="text-2xl font-semibold">
+                <h3 className="text-xl font-semibold">
                   {course.name}
                 </h3>
 
@@ -258,9 +258,9 @@ const joinCourse = async () => {
       </div>
 {showCreateModal && (
 
-  <div className="fixed inset-0 flex items-center justify-center bg-black/50">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-6">
 
-    <div className="w-full max-w-md rounded bg-white p-6">
+    <div className="ci-card w-full max-w-md p-6">
 
       <h2 className="mb-4 text-xl font-bold">
         Create Course
@@ -268,7 +268,7 @@ const joinCourse = async () => {
 
       <input
         placeholder="Course Name"
-        className="mb-3 w-full rounded border p-3"
+        className="mb-3 ci-input"
         value={courseName}
         onChange={(e) =>
           setCourseName(e.target.value)
@@ -277,7 +277,7 @@ const joinCourse = async () => {
 
       <textarea
         placeholder="Description"
-        className="mb-4 w-full rounded border p-3"
+        className="mb-4 ci-input"
         value={courseDescription}
         onChange={(e) =>
           setCourseDescription(
@@ -292,14 +292,14 @@ const joinCourse = async () => {
           onClick={() =>
             setShowCreateModal(false)
           }
-          className="rounded border px-4 py-2"
+          className="ci-button-secondary"
         >
           Cancel
         </button>
 
         <button
           onClick={createCourse}
-          className="rounded bg-black px-4 py-2 text-white"
+          className="ci-button-primary"
         >
           Create
         </button>
@@ -314,9 +314,9 @@ const joinCourse = async () => {
 }
 {showJoinModal && (
 
-  <div className="fixed inset-0 flex items-center justify-center bg-black/50">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-6">
 
-    <div className="w-full max-w-md rounded bg-white p-6">
+    <div className="ci-card w-full max-w-md p-6">
 
       <h2 className="mb-4 text-xl font-bold">
         Join Course
@@ -324,7 +324,7 @@ const joinCourse = async () => {
 
       <input
         placeholder="Join Code"
-        className="mb-4 w-full rounded border p-3"
+        className="mb-4 ci-input"
         value={joinCode}
         onChange={(e) =>
           setJoinCode(e.target.value)
@@ -337,14 +337,14 @@ const joinCourse = async () => {
           onClick={() =>
             setShowJoinModal(false)
           }
-          className="rounded border px-4 py-2"
+          className="ci-button-secondary"
         >
           Cancel
         </button>
 
         <button
           onClick={joinCourse}
-          className="rounded bg-black px-4 py-2 text-white"
+          className="ci-button-primary"
         >
           Join
         </button>

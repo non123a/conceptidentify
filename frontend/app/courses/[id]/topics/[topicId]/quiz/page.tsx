@@ -179,7 +179,7 @@ export default function QuizPage() {
 
   if (loading) {
     return (
-      <div className="p-10">
+      <div className="ci-page">
         <p className="text-gray-600">Loading quiz...</p>
       </div>
     );
@@ -191,7 +191,7 @@ export default function QuizPage() {
 
   if (error && !quizData) {
     return (
-      <div className="p-10">
+      <div className="ci-page">
         <p className="text-red-500 mb-4">{error}</p>
         <Link
           href={`/courses/${params.id}/topics/${params.topicId}`}
@@ -205,7 +205,7 @@ export default function QuizPage() {
 
   if (!quizData) {
     return (
-      <div className="p-10 text-red-500">Quiz not found</div>
+      <div className="ci-page text-red-600">Quiz not found</div>
     );
   }
 
@@ -225,9 +225,9 @@ export default function QuizPage() {
 
   if (submittedResults) {
     return (
-      <div className="p-10 max-w-4xl mx-auto">
+      <div className="ci-page-narrow">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">
+          <h1 className="text-3xl font-bold mb-2">
             {topic.name} - Diagnostic Results
           </h1>
           <p className="text-gray-600">
@@ -236,7 +236,7 @@ export default function QuizPage() {
         </div>
 
         {submittedResults.length === 0 ? (
-          <div className="p-6 bg-gray-50 rounded-lg border">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
             <p className="text-gray-600">
               No submitted answers were evaluated.
             </p>
@@ -246,7 +246,7 @@ export default function QuizPage() {
             {submittedResults.map((result, index) => (
               <div
                 key={`${result.question}-${index}`}
-                className="border rounded-lg p-6 bg-white shadow-sm"
+                className="ci-card p-6"
               >
                 <div className="mb-4 flex justify-between gap-4">
                   <p className="text-sm text-gray-500">
@@ -288,13 +288,13 @@ export default function QuizPage() {
         <div className="mt-10 flex gap-4">
           <Link
             href={`/courses/${params.id}/topics/${params.topicId}`}
-            className="px-6 py-3 border rounded-lg font-semibold hover:bg-gray-50"
+            className="ci-button-secondary"
           >
             Back to Topic
           </Link>
           <Link
             href={`/courses/${params.id}/topics/${params.topicId}/results`}
-            className="px-6 py-3 border rounded-lg font-semibold hover:bg-gray-50"
+            className="ci-button-secondary"
           >
             View Diagnostic History
           </Link>
@@ -305,17 +305,17 @@ export default function QuizPage() {
 
   if (questions.length === 0) {
     return (
-      <div className="p-10 max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6">
+      <div className="ci-page-narrow">
+        <h1 className="text-3xl font-bold mb-6">
           {topic.name} - Diagnostic Quiz
         </h1>
-        <div className="p-6 bg-gray-50 rounded-lg border">
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
           <p className="text-gray-600 mb-6">
             No unanswered diagnostic questions are available.
           </p>
           <Link
             href={`/courses/${params.id}/topics/${params.topicId}`}
-            className="inline-block px-6 py-3 border rounded-lg font-semibold hover:bg-gray-50"
+            className="ci-button-secondary"
           >
             Back to Topic
           </Link>
@@ -329,10 +329,10 @@ export default function QuizPage() {
   // ====================================
 
   return (
-    <div className="p-10 max-w-4xl mx-auto">
+    <div className="ci-page-narrow">
       {/* HEADER */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">
+        <h1 className="text-3xl font-bold mb-2">
           {topic.name}
         </h1>
         <p className="text-gray-600">
@@ -342,7 +342,7 @@ export default function QuizPage() {
 
       {/* ERROR ALERT */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded text-red-700">
+        <div className="ci-alert border-red-200 bg-red-50 text-red-700 mb-6">
           {error}
         </div>
       )}
@@ -353,7 +353,7 @@ export default function QuizPage() {
           {questions.map((question, index) => (
             <div
               key={question.id}
-              className="border rounded-lg p-6 bg-white shadow-sm"
+              className="ci-card p-6"
             >
               {/* QUESTION NUMBER & TEXT */}
               <div className="mb-4">
@@ -420,14 +420,14 @@ export default function QuizPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="ci-button-primary flex-1 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {submitting ? "Submitting..." : "Submit Quiz"}
           </button>
 
           <Link
             href={`/courses/${params.id}/topics/${params.topicId}`}
-            className="px-6 py-3 border rounded-lg font-semibold hover:bg-gray-50"
+            className="ci-button-secondary"
           >
             Cancel
           </Link>
