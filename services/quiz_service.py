@@ -50,6 +50,7 @@ def evaluate_question_answer(question, raw_answer):
                 question=question.text,
                 student_answer=display_answer,
                 topic_name=question.topic.name,
+                topic_id=question.topic.id,
                 reference_answer=question.correct_answer,
                 material_text=material_text
             )

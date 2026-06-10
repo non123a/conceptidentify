@@ -10,7 +10,7 @@ load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-def evaluate_open_answer(question, student_answer, topic_name, reference_answer=None,material_text=None):
+def evaluate_open_answer(question, student_answer, topic_name,topic_id, reference_answer=None,material_text=None):
     print(f"\n🔥 DEBUG: Function called with question='{question[:50]}...', answer='{student_answer[:50]}...', topic='{topic_name}', reference='{reference_answer}'")
     try:
         print("\n================ AI DEBUG START ================")
@@ -31,7 +31,7 @@ def evaluate_open_answer(question, student_answer, topic_name, reference_answer=
         {student_answer}
         """
 
-        retrieved_chunks = search_chunks(search_query)
+        retrieved_chunks = search_chunks(search_query, topic_id=topic_id)
 
         retrieved_text = "\n\n".join([
             chunk.chunk_text
@@ -46,6 +46,7 @@ def evaluate_open_answer(question, student_answer, topic_name, reference_answer=
         print(retrieved_text)
         prompt = EVALUATE_ANSWER_PROMPT.format(
             topic=topic_name,
+            topic_id=topic_id,
             question=question,
             answer=student_answer,
             reference=reference_answer or "Not provided",
@@ -83,14 +84,47 @@ def evaluate_open_answer(question, student_answer, topic_name, reference_answer=
                     break
                 except Exception as e:
                     last_error = e
-                    if "503" in str(e) and attempt < max_retries - 1:
-                        wait_time = min(2 ** attempt, 10)
-                        print(f"🔄 RETRY {attempt + 1}/{max_retries} in {wait_time}s due to 503")
-                        time.sleep(wait_time)
-                        continue
-                    if "404" in str(e) and "model" in str(e).lower():
-                        print(f"⚠️ Model {model_name} unavailable, trying next model")
+                    # if "503" in str(e) and attempt < max_retries - 1:
+                    #     wait_time = min(2 ** attempt, 10)
+                    #     print(f"🔄 RETRY {attempt + 1}/{max_retries} in {wait_time}s due to 503")
+                    #     time.sleep(wait_time)
+                    #     continue
+                    # if "404" in str(e) and "model" in str(e).lower():
+                    #     print(f"⚠️ Model {model_name} unavailable, trying next model")
+                    #     break
+                    # raise
+                    if "503" in str(e):
+
+                        if attempt < max_retries - 1:
+
+                            wait_time = min(
+                                2 ** attempt,
+                                10
+                            )
+
+                            print(
+                                f"🔄 RETRY {attempt + 1}/{max_retries} in {wait_time}s due to 503"
+                            )
+
+                            time.sleep(wait_time)
+
+                            continue
+
+                        print(
+                            f"⚠️ {model_name} unavailable after retries, trying next model"
+                        )
+
                         break
+
+
+                    if "404" in str(e):
+
+                        print(
+                            f"⚠️ Model {model_name} not found, trying next model"
+                        )
+
+                        break
+
                     raise
             if response is not None:
                 break

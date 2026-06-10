@@ -31,7 +31,7 @@ from topics.models import Topic
 from topics.serializers import TopicSerializer
 from courses.models import Enrollment
 from api.permissions import IsStudent
-from services.quiz_service import handle_topic_submission
+from services.quiz_service import evaluate_question_answer, handle_topic_submission
 
 
 @api_view(["GET"])
@@ -373,6 +373,9 @@ def get_student_results(request, topic_id):
             student=request.user,
             question__topic=topic
         ).order_by("-created_at")
+        pending_count = responses.filter(
+            feedback="Evaluating..."
+        ).count()
         
         serializer = StudentResponseSerializer(
             responses,
@@ -381,27 +384,164 @@ def get_student_results(request, topic_id):
         
         # ✅ Calculate summary stats
         total_responses = responses.count()
-        if total_responses > 0:
-            avg_score = responses.aggregate(
-                models.Avg('score')
-            )['score__avg']
-            total_score = responses.aggregate(
-                models.Sum('score')
-            )['score__sum']
+        # if total_responses > 0:
+        #     avg_score = responses.aggregate(
+        #         models.Avg('score')
+        #     )['score__avg']
+        #     total_score = responses.aggregate(
+        #         models.Sum('score')
+        #     )['score__sum']
+        # else:
+        #     avg_score = 0
+        #     total_score = 0
+        #new score with pending system
+        graded_responses = responses.exclude(
+            feedback="Evaluating..."
+        )
+        if graded_responses.exists():
+
+            avg_score = graded_responses.aggregate(
+                models.Avg("score")
+            )["score__avg"]
+
+            total_score = graded_responses.aggregate(
+                models.Sum("score")
+            )["score__sum"]
+
         else:
+
             avg_score = 0
             total_score = 0
-        
         return Response({
             "success": True,
             "topic": TopicSerializer(topic).data,
             "total_responses": total_responses,
             "average_score": round(avg_score or 0, 2),
             "total_score": round(total_score or 0, 2),
+            "pending_count": pending_count,
             "results": serializer.data,
         })
+        #-----------------------
+        # return Response({
+        #     "success": True,
+        #     "topic": TopicSerializer(topic).data,
+        #     "total_responses": total_responses,
+        #     "average_score": round(avg_score or 0, 2),
+        #     "total_score": round(total_score or 0, 2),
+        #     "results": serializer.data,
+        # })
     
     except Exception as e:
+        return Response(
+            {
+                "success": False,
+                "error": str(e)
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated, IsStudent])
+def reevaluate_pending_answers(
+    request,
+    topic_id
+):
+    """
+    POST /api/topics/<topic_id>/reevaluate/
+
+    Re-evaluate all pending AI answers for
+    the current student.
+    """
+
+    try:
+
+        topic = get_object_or_404(
+            Topic,
+            id=topic_id
+        )
+
+        enrollment = Enrollment.objects.filter(
+            student=request.user,
+            course=topic.course
+        ).first()
+
+        if not enrollment:
+
+            return Response(
+                {
+                    "success": False,
+                    "error":
+                    "Not enrolled in this course"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        pending_responses = (
+            StudentResponse.objects.filter(
+                student=request.user,
+                question__topic=topic,
+                feedback__in=[
+                    "Evaluating...",
+                    "Evaluation pending"
+                ]
+            )
+        )
+        print("TOPIC:", topic.id)
+        print("USER:", request.user.id)
+        print("PENDING COUNT:", pending_responses.count())
+
+        for r in pending_responses:
+            print(
+                "FOUND:",
+                r.id,
+                r.feedback
+            )
+
+        updated = 0
+
+        for response in pending_responses:
+
+            result = evaluate_question_answer(
+                response.question,
+                response.answer
+            )
+
+            if not result["ai_pending"]:
+
+                response.score = (
+                    result["stored_score"]
+                )
+
+                response.feedback = (
+                    result["feedback"]
+                )
+
+                response.save()
+
+                updated += 1
+
+        remaining_pending = (
+            StudentResponse.objects.filter(
+                student=request.user,
+                question__topic=topic,
+                feedback__in=[
+                    "Evaluating...",
+                    "Evaluation pending"
+                ]
+            ).count()
+        )
+
+        return Response(
+            {
+                "success": True,
+                "updated": updated,
+                "remaining_pending":
+                remaining_pending
+            }
+        )
+
+    except Exception as e:
+
         return Response(
             {
                 "success": False,

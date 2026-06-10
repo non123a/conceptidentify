@@ -1,6 +1,7 @@
 from django.urls import include, path
 
 from .views import (
+    GoogleLoginView,
     LoginView,
     MeView,
     LogoutView,
@@ -14,5 +15,9 @@ urlpatterns = [
     path(
         "register/",
         RegisterView.as_view(),
+    ),
+    path(
+        "google/",
+        GoogleLoginView.as_view()
     ),
 ]

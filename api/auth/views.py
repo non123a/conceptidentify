@@ -2,10 +2,16 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-
+from google.oauth2 import id_token
+from google.auth.transport import requests
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
 from django.contrib.auth import authenticate
+
+from users.models import User
+import logging
+
+logger = logging.getLogger(__name__)
 from rest_framework.permissions import (
     IsAuthenticated,
     AllowAny,
@@ -145,3 +151,197 @@ class RegisterView(APIView):
             },
             status=status.HTTP_400_BAD_REQUEST
         )
+    
+
+
+
+class GoogleLoginView(APIView):
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+
+        credential = request.data.get(
+            "credential"
+        )
+
+        role = request.data.get(
+            "role",
+        )
+
+        try:
+
+            google_user = (
+                id_token.verify_oauth2_token(
+                    credential,
+                    requests.Request(),
+                    settings.GOOGLE_CLIENT_ID
+                )
+            )
+
+            google_id = google_user["sub"]
+
+            email = google_user["email"]
+
+            first_name = (
+                google_user.get(
+                    "given_name",
+                    ""
+                )
+            )
+
+            last_name = (
+                google_user.get(
+                    "family_name",
+                    ""
+                )
+            )
+            user = User.objects.filter(
+                google_id=google_id
+            ).first()
+            if not user:
+                user = User.objects.filter(
+                    email=email
+                ).first()
+
+                if user:
+
+                    user.google_id = google_id
+                    user.save()
+
+            if user:
+
+                if (
+                    user.role == "lecturer"
+                    and not user.is_approved
+                ):
+                    return Response(
+                        {
+                            "success": False,
+                            "message":
+                            "Lecturer not approved yet."
+                        },
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+
+                refresh = RefreshToken.for_user(
+                    user
+                )
+
+                response = Response(
+                    {
+                        "success": True,
+                        "message":
+                        "Login successful",
+                        "data": {
+                            "user":
+                            UserSerializer(user).data
+                        }
+                    }
+                )
+
+                response.set_cookie(
+                    key="access",
+                    value=str(
+                        refresh.access_token
+                    ),
+                    httponly=True,
+                    secure=not settings.DEBUG,
+                    samesite="Lax",
+                )
+
+                response.set_cookie(
+                    key="refresh",
+                    value=str(refresh),
+                    httponly=True,
+                    secure=not settings.DEBUG,
+                    samesite="Lax",
+                )
+
+                return response
+            
+            if not user:
+
+                if not role:
+
+                    return Response(
+                        {
+                            "success": False,
+                            "message":
+                            "Account not found. Please register first."
+                        },
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+
+                user = User.objects.create(
+                    username=email,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    role=role,
+                    google_id=google_id,
+                )
+            if user.role == "lecturer":
+
+                user.is_approved = False
+                user.save()
+
+                return Response(
+                    {
+                        "success": True,
+                        "pending": True,
+                        "message":
+                        "Lecturer account created. Waiting for approval."
+                    }
+                )
+            user.is_approved = True
+
+            user.save()
+
+            refresh = RefreshToken.for_user(user)
+
+            response = Response(
+                {
+                    "success": True,
+                    "message":
+                    "Google login successful",
+                    "data": {
+                        "user":
+                        UserSerializer(user).data
+                    }
+                }
+            )
+
+            response.set_cookie(
+                key="access",
+                value=str(
+                    refresh.access_token
+                ),
+                httponly=True,
+                secure=not settings.DEBUG,
+                samesite="Lax",
+            )
+
+            response.set_cookie(
+                key="refresh",
+                value=str(refresh),
+                httponly=True,
+                secure=not settings.DEBUG,
+                samesite="Lax",
+            )
+
+            return response
+        except Exception as e:
+
+            logger.error(
+                f"Google Login Error: {str(e)}"
+            )
+            return Response(
+                {
+                    "success": False,
+                    "message":
+                    "Invalid Google token"
+                },
+                status=400
+            )

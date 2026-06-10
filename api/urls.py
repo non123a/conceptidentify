@@ -46,6 +46,7 @@ from api.views.student_api import (
     get_student_results,
     get_practice_questions,
     submit_practice_questions,
+    reevaluate_pending_answers,
 )
 
 from api.views.analytics_api import (
@@ -181,6 +182,11 @@ urlpatterns = [
         "topics/<int:topic_id>/practice/submit/",
         submit_practice_questions,
         name="submit_practice_questions",
+    ),
+    path(
+        "topics/<int:topic_id>/reevaluate/",
+        reevaluate_pending_answers,
+        name="reevaluate_pending_answers",
     ),
     
     # ====================================
