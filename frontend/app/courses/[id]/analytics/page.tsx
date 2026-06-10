@@ -279,16 +279,6 @@ export default function AnalyticsPage() {
                     <td className="py-3">
                         {topic.topic}
                     </td>
-                    {/* <td className="py-3">
-
-                        <Link
-                            href={`/courses/${params.id}/topics/${topic.topic_id}/analytics`}
-                            className="font-medium text-blue-600 hover:underline"
-                        >
-                            {topic.topic}
-                        </Link>
-
-                    </td> */}
                     <td className="py-3">
 
                         <Link

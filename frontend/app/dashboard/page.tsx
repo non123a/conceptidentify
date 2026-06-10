@@ -7,6 +7,7 @@ import Link from "next/link";
 
 
 import api from "@/lib/api";
+import Toast from "@/components/ui/Toast";
 type Course = {
   id: number;
   name: string;
@@ -29,7 +30,11 @@ const [joinCode, setJoinCode] =
   useState("");
 const [courseName, setCourseName] =
   useState("");
-
+const [notification, setNotification] =
+  useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 const [courseDescription, setCourseDescription] =
   useState("");
   useEffect(() => {
@@ -59,9 +64,10 @@ const [courseDescription, setCourseDescription] =
   const createCourse = async () => {
     if (!courseName.trim()) {
 
-      alert(
-        "Course name is required"
-      );
+      setNotification({
+        type: "error",
+        message: "Course name is required",
+      });
 
       return;
     } try {
@@ -96,18 +102,20 @@ const [courseDescription, setCourseDescription] =
 
     console.error(error);
 
-    alert(
-      "Failed to create course"
-    );
+    setNotification({
+      type: "error",
+      message: "Failed to create course",
+    });
   }
 };
 const joinCourse = async () => {
 
   if (!joinCode.trim()) {
 
-    alert(
-      "Join code is required"
-    );
+    setNotification({
+      type: "error",
+      message: "Join code is required",
+    });
 
     return;
   }
@@ -131,9 +139,10 @@ const joinCourse = async () => {
 
     console.error(error);
 
-    alert(
-      "Failed to join course"
-    );
+    setNotification({
+      type: "error",
+      message: "Failed to join course",
+    });
   }
 };
   if (loading) {
@@ -154,6 +163,15 @@ const joinCourse = async () => {
   }
 
   return (
+    <>
+    {notification && (
+
+    <Toast
+      message={notification.message}
+      type={notification.type}
+    />
+
+  )}
     <div className="ci-page">
 
       <h1 className="mb-6 text-3xl font-bold">
@@ -357,6 +375,6 @@ const joinCourse = async () => {
 
 )}
     </div>
-    
+    </>
   );
 }

@@ -8,6 +8,7 @@ import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
 import Link from "next/link";
+import Toast from "@/components/ui/Toast";
 type Course = {
   id: number;
   name: string;
@@ -55,7 +56,11 @@ const [studentAnalytics, setStudentAnalytics] =
   useState<StudentAnalytics[]>([]);
 const [topicName, setTopicName] =
   useState("");
-
+const [notification, setNotification] =
+  useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 const [topicDescription, setTopicDescription] =
   useState("");
   const fetchCourse = async () => {
@@ -113,9 +118,11 @@ const [topicDescription, setTopicDescription] =
 
   if (!topicName.trim()) {
 
-    alert(
-      "Topic name is required"
-    );
+
+    setNotification({
+      type: "error",
+      message: "Topic name is required",
+    });
 
     return;
   }
@@ -134,23 +141,42 @@ const [topicDescription, setTopicDescription] =
 
     setTopicName("");
     setTopicDescription("");
-
+    setNotification({
+      type: "success",
+      message: "Topic created successfully.",
+    });
     fetchCourse();
 
   } catch (error) {
 
     console.error(error);
 
-    alert(
-      "Failed to create topic"
-    );
+    setNotification({
+      type: "error",
+      message: "Failed to create topic.",
+    });
   }
 };
+
+
   useEffect(() => {
 
     void Promise.resolve().then(fetchCourse);
 
   }, []);
+  useEffect(() => {
+
+  if (!notification) return;
+
+  const timer = setTimeout(() => {
+
+    setNotification(null);
+
+  }, 3000);
+
+  return () => clearTimeout(timer);
+
+}, [notification]);
   
   if (loading) {
 
@@ -171,6 +197,16 @@ const [topicDescription, setTopicDescription] =
   }
 
   return (
+    <>
+
+    {notification && (
+
+      <Toast
+        message={notification.message}
+        type={notification.type}
+      />
+
+    )}
     <div className="ci-page">
 
   <div className="mb-10">
@@ -505,5 +541,6 @@ const [topicDescription, setTopicDescription] =
 
 )}
 </div>
+</>
   );
 }

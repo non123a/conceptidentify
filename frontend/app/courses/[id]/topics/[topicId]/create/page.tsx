@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 
 import api from "@/lib/api";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import Toast from "@/components/ui/Toast";
 
 type Topic = {
   id: number;
@@ -100,13 +101,30 @@ const [selectedGeneratedIndex, setSelectedGeneratedIndex] =
     useState("");
   const [creatingQuestion, setCreatingQuestion] =
     useState(false);
+  const [notification, setNotification] =
+    useState<{
+      message: string;
+      type: "success" | "error";
+    } | null>(null);
 
   useEffect(() => {
-
+    
     fetchPage();
 
   }, []);
+  useEffect(() => {
 
+    if (!notification) return;
+
+    const timer = setTimeout(() => {
+
+      setNotification(null);
+
+    }, 3000);
+
+    return () => clearTimeout(timer);
+
+  }, [notification]);
   const fetchPage = async () => {
 
     try {
@@ -147,7 +165,10 @@ const [selectedGeneratedIndex, setSelectedGeneratedIndex] =
 
   const createQuestion = async () => {
     if (!questionText.trim()) {
-    alert("Question text required");
+      setNotification({
+        type: "error",
+        message: "Question text is required.",
+      });
     return;
     }
     try {
@@ -206,7 +227,10 @@ const [selectedGeneratedIndex, setSelectedGeneratedIndex] =
         "",
       ]);
 
-      alert("Question created");
+      setNotification({
+        type: "success",
+        message: "Question created successfully.",
+      });
 
     } catch (error) {
 
@@ -289,8 +313,10 @@ const saveGeneratedQuestions = async () => {
 
     );
 
-    alert("Questions saved");
-
+    setNotification({
+        type: "success",
+        message: "Question Saved Successfully.",
+    });
     setGeneratedQuestions([]);
 
   } catch (error) {
@@ -316,9 +342,10 @@ const approveAllGeneratedQuestions = async () => {
       }
     );
 
-    alert(
-      "All generated questions approved"
-    );
+    setNotification({
+        type: "success",
+        message: "All generated questions approved",
+    });
 
     setGeneratedQuestions([]);
     setSelectedQuestions([]);
@@ -327,9 +354,10 @@ const approveAllGeneratedQuestions = async () => {
 
     console.error(error);
 
-    alert(
-      "Failed to approve questions"
-    );
+    setNotification({
+        type: "error",
+        message: "Failed to approve questions",
+    });
 
   } finally {
 
@@ -342,18 +370,20 @@ const approveAllGeneratedQuestions = async () => {
 const uploadMaterial = async () => {
   if (!materialTitle.trim()) {
 
-    alert(
-      "Material title is required."
-    );
+    setNotification({
+        type: "error",
+        message: "Material title is required",
+    });
 
     return;
   }
 
   if (!materialFile) {
 
-    alert(
-      "Please select a PDF file."
-    );
+    setNotification({
+        type: "error",
+        message: "Please select a PDF file",
+    });
 
     return;
   }
@@ -389,17 +419,19 @@ const uploadMaterial = async () => {
 
     await fetchPage();
 
-    alert(
-      "Material uploaded"
-    );
+    setNotification({
+        type: "success",
+        message: "Material uploaded successfully.",
+    });
 
   } catch (error) {
 
     console.error(error);
 
-    alert(
-      "Upload failed"
-    );
+    setNotification({
+        type: "error",
+        message: "Failed to upload material.",
+    });
 
   } finally {
 
@@ -438,9 +470,10 @@ const handleConfirmDeleteMaterial = async () => {
 
     console.error(error);
 
-    alert(
-      "Failed to delete material"
-    );
+    setNotification({
+        type: "error",
+        message: "Failed to delete material.",
+    });
 
   } finally {
 
@@ -641,18 +674,20 @@ const toggleQuestionSelection = (
 
     if (file.type !== "application/pdf") {
 
-      alert(
-        "Only PDF files are allowed."
-      );
+      setNotification({
+        type: "error",
+        message: "Only PDF files are allowed.",
+      });
 
       return;
     }
 
     if (file.size > 20 * 1024 * 1024) {
 
-      alert(
-        "File size must be less than 20MB."
-      );
+      setNotification({
+        type: "error",
+        message: "File size must be less than 20MB.",
+      });
 
       return;
     }
@@ -940,7 +975,29 @@ const toggleQuestionSelection = (
 
         </div>
   </div>
+{/* {notification && (
 
+  <div
+    className={`mb-6 rounded-lg border p-4 ${
+      notification.type === "success"
+        ? "border-green-300 bg-green-50 text-green-700"
+        : "border-red-300 bg-red-50 text-red-700"
+    }`}
+  >
+
+    {notification.message}
+
+  </div>
+
+)} */}
+{notification && (
+
+  <Toast
+    message={notification.message}
+    type={notification.type}
+  />
+
+)}
   {/* RIGHT PANEL */}
   <div className="xl:col-span-2">
     
