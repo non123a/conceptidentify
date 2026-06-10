@@ -271,7 +271,7 @@ export default function StudentTopicAnalyticsPage() {
 
           <p className="text-green-600">
 
-            Great job! No weak questions found.
+            Great job! No weak questions found
 
           </p>
 
