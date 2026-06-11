@@ -743,7 +743,7 @@ const toggleQuestionSelection = (
                 <div className="mt-4 flex gap-4">
 
                   <a
-                    href={`${process.env.NEXT_PUBLIC_API_URL}:8000${material.file}`}
+                    href={`${process.env.mediaL}${material.file}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline"
