@@ -25,7 +25,7 @@ type AuthContextType = {
   login: (
     username: string,
     password: string
-  ) => Promise<boolean>;
+  ) => Promise<{ success: boolean; role: string | null }>;
 
   register: (
     data: {
@@ -68,18 +68,6 @@ export function AuthProvider({
 
       setUser(null);
 
-      const publicRoutes = [
-        "/login",
-        "/register",
-      ];
-
-      if (
-        typeof window !== "undefined" &&
-        !publicRoutes.includes(window.location.pathname)
-      ) {
-        window.location.href = "/login";
-      }
-
     } finally {
 
       setLoading(false);
@@ -109,11 +97,11 @@ export function AuthProvider({
 
         setUser(meResponse.data.data);
 
-        return true;
+        return { success: true, role: meResponse.data.data.role };
 
     } catch (error) {
         console.log(error);
-        return false;
+        return { success: false, role: null };
 
     } finally {
 
@@ -213,5 +201,3 @@ export function useAuth() {
 
   return context;
 }
-
-
