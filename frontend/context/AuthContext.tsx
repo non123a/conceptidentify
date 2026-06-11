@@ -87,6 +87,8 @@ export function AuthProvider({
 
         setLoading(true);
 
+        console.log("[AuthContext] Initiating login with payload:", { username, password: "***" });
+
         await api.post("/auth/login/", {
         username,
         password,
@@ -94,13 +96,16 @@ export function AuthProvider({
 
         // Fetch fresh user from backend
         const meResponse = await api.get("/auth/me/");
+        console.log("[AuthContext] Raw response from /auth/me/:", meResponse);
 
         setUser(meResponse.data.data);
 
-        return { success: true, role: meResponse.data.data.role };
+        const returnObj = { success: true, role: meResponse.data.data.role };
+        console.log("[AuthContext] Returning from login:", returnObj);
+        return returnObj;
 
     } catch (error) {
-        console.log(error);
+        console.error("[AuthContext] Login Error:", error);
         return { success: false, role: null };
 
     } finally {

@@ -70,13 +70,21 @@ class LoginView(APIView):
                 }
             })
 
+            is_production = not settings.DEBUG
+            cookie_domain = ".conceptidentif.space" if is_production else None
+            cookie_samesite = "None" if is_production else "Lax"
+            cookie_secure = is_production
+
+            logger.info(f"[Login Diagnostics] settings.DEBUG: {settings.DEBUG}, is_production: {is_production}")
+            logger.info(f"[Login Diagnostics] Cookie params - domain: {cookie_domain}, samesite: {cookie_samesite}, secure: {cookie_secure}")
+
             response.set_cookie(
                 key='access',
                 value=str(refresh.access_token),
                 httponly=True,
-                secure=not settings.DEBUG,
-                samesite='None',
-                domain=".conceptidentif.space",
+                secure=cookie_secure,
+                samesite=cookie_samesite,
+                domain=cookie_domain,
                 path="/",   
             )
             
@@ -84,12 +92,13 @@ class LoginView(APIView):
                 key='refresh',
                 value=str(refresh),
                 httponly=True,
-                secure=not settings.DEBUG,
-                samesite='None',
-                domain=".conceptidentif.space",
+                secure=cookie_secure,
+                samesite=cookie_samesite,
+                domain=cookie_domain,
                 path="/",     
             )
             
+            logger.info(f"[Login Diagnostics] Final Response headers: {response.headers}")
             return response
 
         return Response(
@@ -247,15 +256,23 @@ class GoogleLoginView(APIView):
                     }
                 )
 
+                is_production = not settings.DEBUG
+                cookie_domain = ".conceptidentif.space" if is_production else None
+                cookie_samesite = "None" if is_production else "Lax"
+                cookie_secure = is_production
+
+                logger.info(f"[GoogleLogin Diagnostics] settings.DEBUG: {settings.DEBUG}, is_production: {is_production}")
+                logger.info(f"[GoogleLogin Diagnostics] Cookie params - domain: {cookie_domain}, samesite: {cookie_samesite}, secure: {cookie_secure}")
+
                 response.set_cookie(
                     key="access",
                     value=str(
                         refresh.access_token
                     ),
                     httponly=True,
-                    secure=not settings.DEBUG,
-                    samesite="None",
-                    domain=".conceptidentif.space",
+                    secure=cookie_secure,
+                    samesite=cookie_samesite,
+                    domain=cookie_domain,
                     path="/",   
                 )
 
@@ -263,12 +280,13 @@ class GoogleLoginView(APIView):
                     key="refresh",
                     value=str(refresh),
                     httponly=True,
-                    secure=not settings.DEBUG,
-                    samesite="None",
-                    domain=".conceptidentif.space",
+                    secure=cookie_secure,
+                    samesite=cookie_samesite,
+                    domain=cookie_domain,
                     path="/",   
                 )
 
+                logger.info(f"[GoogleLogin Diagnostics] Final Response headers: {response.headers}")
                 return response
             
             if not user:
@@ -323,15 +341,23 @@ class GoogleLoginView(APIView):
                 }
             )
 
+            is_production = not settings.DEBUG
+            cookie_domain = ".conceptidentif.space" if is_production else None
+            cookie_samesite = "None" if is_production else "Lax"
+            cookie_secure = is_production
+
+            logger.info(f"[GoogleRegistration Diagnostics] settings.DEBUG: {settings.DEBUG}, is_production: {is_production}")
+            logger.info(f"[GoogleRegistration Diagnostics] Cookie params - domain: {cookie_domain}, samesite: {cookie_samesite}, secure: {cookie_secure}")
+
             response.set_cookie(
                 key="access",
                 value=str(
                     refresh.access_token
                 ),
                 httponly=True,
-                secure=not settings.DEBUG,
-                samesite="None",
-                domain=".conceptidentif.space",
+                secure=cookie_secure,
+                samesite=cookie_samesite,
+                domain=cookie_domain,
                 path="/",
             )
 
@@ -339,12 +365,13 @@ class GoogleLoginView(APIView):
                 key="refresh",
                 value=str(refresh),
                 httponly=True,
-                secure=not settings.DEBUG,
-                samesite="None",
-                domain=".conceptidentif.space",
+                secure=cookie_secure,
+                samesite=cookie_samesite,
+                domain=cookie_domain,
                 path="/",
             )
 
+            logger.info(f"[GoogleRegistration Diagnostics] Final Response headers: {response.headers}")
             return response
         except Exception as e:
 
