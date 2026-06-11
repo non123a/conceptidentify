@@ -28,10 +28,6 @@ useEffect(() => {
     }
 }, [user, loading, allowedRole, router]);
 
-// if (loading || !user || user.role !== allowedRole) {
-//     // Return null to prevent flashing the page content before redirect
-//     return null;
-// }
 if (loading) {
   return (
     <div className="ci-page">

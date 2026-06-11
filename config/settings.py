@@ -178,7 +178,15 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
 # 3. Prevent CSRF origin errors when logging into Django Admin from your domains
-CSRF_TRUSTED_ORIGINS = os.getenv(
-    "CORS_ALLOWED_ORIGINS", 
-    "http://localhost:3000"
-).split(",")
+# CSRF_TRUSTED_ORIGINS = os.getenv(
+#     "CORS_ALLOWED_ORIGINS", 
+#     "http://localhost:3000"
+# ).split(",")
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://api.conceptidentif.space",
+    "https://frontend.conceptidentif.space",
+    "https://conceptidentif.space",
+    "https://www.conceptidentif.space",
+]
