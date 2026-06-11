@@ -1,3 +1,5 @@
+from os import path
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -23,10 +25,10 @@ from .serializers import (
     RegisterSerializer,
 )
 class LoginView(APIView):
-
+    authentication_classes = []
+    permission_classes = [AllowAny]
     def post(self, request):
-        authentication_classes = []
-        permission_classes = [AllowAny]
+
         serializer = LoginSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -73,7 +75,9 @@ class LoginView(APIView):
                 value=str(refresh.access_token),
                 httponly=True,
                 secure=not settings.DEBUG,
-                samesite='Lax'
+                samesite='None',
+                domain=".conceptidentif.space",
+                path="/",   
             )
             
             response.set_cookie(
@@ -81,7 +85,9 @@ class LoginView(APIView):
                 value=str(refresh),
                 httponly=True,
                 secure=not settings.DEBUG,
-                samesite='Lax'
+                samesite='None',
+                domain=".conceptidentif.space",
+                path="/",     
             )
             
             return response
@@ -248,7 +254,9 @@ class GoogleLoginView(APIView):
                     ),
                     httponly=True,
                     secure=not settings.DEBUG,
-                    samesite="Lax",
+                    samesite="None",
+                    domain=".conceptidentif.space",
+                    path="/",   
                 )
 
                 response.set_cookie(
@@ -256,7 +264,9 @@ class GoogleLoginView(APIView):
                     value=str(refresh),
                     httponly=True,
                     secure=not settings.DEBUG,
-                    samesite="Lax",
+                    samesite="None",
+                    domain=".conceptidentif.space",
+                    path="/",   
                 )
 
                 return response
@@ -320,7 +330,9 @@ class GoogleLoginView(APIView):
                 ),
                 httponly=True,
                 secure=not settings.DEBUG,
-                samesite="Lax",
+                samesite="None",
+                domain=".conceptidentif.space",
+                path="/",
             )
 
             response.set_cookie(
@@ -328,7 +340,9 @@ class GoogleLoginView(APIView):
                 value=str(refresh),
                 httponly=True,
                 secure=not settings.DEBUG,
-                samesite="Lax",
+                samesite="None",
+                domain=".conceptidentif.space",
+                path="/",
             )
 
             return response

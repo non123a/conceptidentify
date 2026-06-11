@@ -165,3 +165,20 @@ REST_FRAMEWORK = {
 GOOGLE_CLIENT_ID = os.getenv(
     "GOOGLE_CLIENT_ID"
 )
+
+# ==========================================
+# PRODUCTION SECURITY & PROXY SETTINGS
+# ==========================================
+
+# 1. Tell Django to trust the HTTPS headers coming from your cloud provider/proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# 2. Ensure built-in Django cookies (like Admin panel) are also strictly HTTPS
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
+# 3. Prevent CSRF origin errors when logging into Django Admin from your domains
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    "CORS_ALLOWED_ORIGINS", 
+    "http://localhost:3000"
+).split(",")
