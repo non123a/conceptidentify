@@ -744,7 +744,9 @@ const toggleQuestionSelection = (
 
                   <a
                     // href={`${process.env.mediaL}${material.file}`}
-                    href={`${process.env.NEXT_PUBLIC_MEDIA_URL}${material.file}`}
+                    // href={`${process.env.NEXT_PUBLIC_MEDIA_URL}${material.file}`}
+                    href={material.file.startsWith("http") ? material.file : `${process.env.NEXT_PUBLIC_MEDIA_URL}${material.file}`}
+
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline"
