@@ -114,8 +114,14 @@ class LogoutView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
         response = Response({"success": True, "message": "Successfully logged out"})
-        response.delete_cookie('access')
-        response.delete_cookie('refresh')
+        
+        is_production = not settings.DEBUG
+        cookie_domain = ".conceptidentif.space" if is_production else None
+        cookie_samesite = "None" if is_production else "Lax"
+        
+        response.delete_cookie('access', domain=cookie_domain, path="/", samesite=cookie_samesite)
+        response.delete_cookie('refresh', domain=cookie_domain, path="/", samesite=cookie_samesite)
+        
         return response
 
 class MeView(APIView):

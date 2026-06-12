@@ -62,11 +62,11 @@ export function AuthProvider({
 
       const response = await api.get("/auth/me/");
 
-      setUser(response.data.data);
+      setUser((prev) => prev ? prev : response.data.data);
 
     } catch (error: any) {
 
-      setUser(null);
+      setUser((prev) => prev ? prev : null);
 
     } finally {
 

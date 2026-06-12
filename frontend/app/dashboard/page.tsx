@@ -80,12 +80,6 @@ const [courseDescription, setCourseDescription] =
       }
     );
 
-    // const courseId =
-    //   response.data.data.id;
-
-    // router.push(
-    //   `/courses/${courseId}`
-    // );
     const courseId =
       response.data.data.id;
 
