@@ -42,6 +42,17 @@ class LoginView(APIView):
             )
 
             if user is None:
+                # Check if this user was created via Google and doesn't have a password set
+                existing_user = User.objects.filter(username=username).first()
+                if existing_user and not existing_user.has_usable_password():
+                    return Response(
+                        {
+                            "success": False,
+                            "message": "This account was created using Google. Please log in using the 'Continue with Google' button."
+                        },
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+
                 return Response(
                     {
                         "success": False,

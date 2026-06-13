@@ -25,7 +25,7 @@ type AuthContextType = {
   login: (
     username: string,
     password: string
-  ) => Promise<{ success: boolean; role: string | null }>;
+  ) => Promise<{ success: boolean; role: string | null; message?: string }>;
 
   register: (
     data: {
@@ -104,9 +104,13 @@ export function AuthProvider({
         console.log("[AuthContext] Returning from login:", returnObj);
         return returnObj;
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("[AuthContext] Login Error:", error);
-        return { success: false, role: null };
+        return { 
+            success: false, 
+            role: null, 
+            message: error?.response?.data?.message || "Login failed" 
+        };
 
     } finally {
 
