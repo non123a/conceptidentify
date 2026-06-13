@@ -48,14 +48,14 @@ export default function LoginPage() {
 
     console.log("BUTTON CLICKED");
 
-    const success = await login(
+    const result = await login(
       username,
       password
     );
 
-    console.log("LOGIN RESULT:", success);
+    console.log("LOGIN RESULT:", result);
 
-    if (success) {
+    if (result.success) {
 
       console.log("REDIRECTING");
 
@@ -63,7 +63,7 @@ export default function LoginPage() {
 
     } else {
 
-      setError("Invalid username or password");
+      setError(result.message || "Invalid username or password");
 
     }
   };
