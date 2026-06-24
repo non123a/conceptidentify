@@ -1,43 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
 import api from "@/lib/api";
 import Link from "next/link";
-import {
-  isAuthenticatedAppPath,
-  LAST_AUTHENTICATED_PATH_KEY,
-} from "@/components/Navbar";
-
-const DEFAULT_AUTHENTICATED_PATH = "/dashboard";
+import GuestOnlyRoute from "@/components/GuestOnlyRoute";
 
 export default function LoginPage() {
 
-  const { user, loading, login } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (loading || !user) {
-      return;
-    }
-
-    const lastAuthenticatedPath =
-      window.sessionStorage.getItem(
-        LAST_AUTHENTICATED_PATH_KEY
-      );
-
-    const redirectPath =
-      lastAuthenticatedPath &&
-      isAuthenticatedAppPath(
-        lastAuthenticatedPath
-      )
-        ? lastAuthenticatedPath
-        : DEFAULT_AUTHENTICATED_PATH;
-
-    router.replace(redirectPath);
-  }, [loading, router, user]);
+  const { login } = useAuth();
 
   const handleGoogleLogin = async (
     credentialResponse: any
@@ -74,14 +46,6 @@ export default function LoginPage() {
 
   const [error, setError] = useState("");
 
-  if (loading || user) {
-    return (
-      <div className="ci-page">
-        Loading...
-      </div>
-    );
-  }
-
   const handleLogin = async () => {
 
     console.log("BUTTON CLICKED");
@@ -107,6 +71,7 @@ export default function LoginPage() {
   };
 
   return (
+    <GuestOnlyRoute>
     <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA] px-6 py-12">
 
       <div className="ci-card w-full max-w-md p-8">
@@ -185,5 +150,6 @@ export default function LoginPage() {
       </div>
 
     </div>
+    </GuestOnlyRoute>
   );
 }

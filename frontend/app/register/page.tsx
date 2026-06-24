@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
 import Link from "next/link";
 import api from "@/lib/api";
+import GuestOnlyRoute from "@/components/GuestOnlyRoute";
 
 export default function RegisterPage() {
 
@@ -93,6 +94,7 @@ export default function RegisterPage() {
   };
 
   return (
+    <GuestOnlyRoute>
     <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA] px-6 py-12">
 
       <div className="ci-card w-full max-w-md p-8">
@@ -251,5 +253,6 @@ export default function RegisterPage() {
       </div>
 
     </div>
+    </GuestOnlyRoute>
   );
 }
