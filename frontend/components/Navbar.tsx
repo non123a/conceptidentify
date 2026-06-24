@@ -1,9 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+
+export const LAST_AUTHENTICATED_PATH_KEY =
+  "conceptIdentify.lastAuthenticatedPath";
+
+const AUTH_PAGE_PATHS = [
+  "/login",
+  "/register",
+];
+
+const AUTHENTICATED_PATH_PREFIXES = [
+  "/dashboard",
+  "/profile",
+  "/courses",
+  "/upload",
+];
+
+export function isAuthenticatedAppPath(pathname: string) {
+  return AUTHENTICATED_PATH_PREFIXES.some((path) =>
+    pathname === path || pathname.startsWith(`${path}/`)
+  );
+}
 
 export default function Navbar() {
 
@@ -11,11 +33,25 @@ export default function Navbar() {
     user,
     logout,
   } = useAuth();
+  const pathname = usePathname();
 
   const [logoutConfirmOpen, setLogoutConfirmOpen] =
     useState(false);
   const [loggingOut, setLoggingOut] =
     useState(false);
+
+  useEffect(() => {
+    if (
+      user &&
+      pathname &&
+      isAuthenticatedAppPath(pathname)
+    ) {
+      window.sessionStorage.setItem(
+        LAST_AUTHENTICATED_PATH_KEY,
+        pathname
+      );
+    }
+  }, [pathname, user]);
 
   const handleConfirmLogout = async () => {
 
@@ -33,7 +69,7 @@ export default function Navbar() {
     }
   };
 
-  if (!user) {
+  if (!user || AUTH_PAGE_PATHS.includes(pathname)) {
     return null;
   }
 
