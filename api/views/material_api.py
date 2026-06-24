@@ -3,8 +3,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from materials.models import MaterialChunk
 from materials.services.chunk_service import chunk_text
-from materials.services.pdf_service import extract_pdf_text
 from materials.services.embedding_service import generate_embedding
+from materials.services.material_text_service import (
+    extract_material_text,
+    get_supported_material_type,
+    is_supported_material_file,
+)
 from api.permissions import IsLecturer, is_topic_owner
 from rest_framework.decorators import (
     api_view,
@@ -49,12 +53,15 @@ def upload_material(request):
             "error": "No file uploaded"
         }, status=400)
 
-    # PDF validation
-    if file.content_type != "application/pdf":
+    material_type = get_supported_material_type(
+        file.name
+    )
+
+    if not is_supported_material_file(file):
         return Response(
             {
                 "error":
-                "Only PDF files are allowed."
+                "Only PDF, TXT, and Markdown files are allowed."
             },
             status=400
         )
@@ -89,10 +96,11 @@ def upload_material(request):
     uploaded_by=request.user
     )
 
-    # Extract PDF text
+    # Extract text and reuse the existing chunking/vector pipeline.
     try:
-        extracted_text = extract_pdf_text(
-            material.file.path
+        extracted_text = extract_material_text(
+            material.file.path,
+            material_type
         )
 
         material.extracted_text = extracted_text
@@ -118,7 +126,7 @@ def upload_material(request):
             )
 
     except Exception as e:
-        print("PDF extraction failed:", e)
+        print("Material extraction failed:", e)
 
     return Response({
         "message": "Material uploaded successfully",

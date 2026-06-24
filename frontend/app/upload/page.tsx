@@ -3,6 +3,11 @@
 import { useState } from "react";
 import RoleGuard from "@/components/RoleGuard";
 import api from "@/lib/api";
+import {
+  MATERIAL_FILE_ACCEPT,
+  MATERIAL_FILE_HELP_TEXT,
+  validateMaterialFile,
+} from "@/lib/materialFiles";
 
 export default function UploadPage() {
   const [title, setTitle] = useState("");
@@ -16,6 +21,13 @@ export default function UploadPage() {
 
     if (!file) {
       setMessage("Please select a file");
+      return;
+    }
+
+    const validationError = validateMaterialFile(file);
+
+    if (validationError) {
+      setMessage(validationError);
       return;
     }
 
@@ -68,13 +80,32 @@ export default function UploadPage() {
 
         <input
           type="file"
+          accept={MATERIAL_FILE_ACCEPT}
           className="w-full"
           onChange={(e) => {
-            if (e.target.files?.[0]) {
-              setFile(e.target.files[0]);
+            const selectedFile =
+              e.target.files?.[0];
+
+            if (selectedFile) {
+              const validationError =
+                validateMaterialFile(selectedFile);
+
+              if (validationError) {
+                setFile(null);
+                setMessage(validationError);
+                e.target.value = "";
+                return;
+              }
+
+              setMessage("");
+              setFile(selectedFile);
             }
           }}
         />
+
+        <p className="text-sm text-gray-500">
+          {MATERIAL_FILE_HELP_TEXT}
+        </p>
 
         <button
           type="submit"

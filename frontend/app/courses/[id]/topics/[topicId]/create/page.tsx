@@ -8,6 +8,11 @@ import { useParams } from "next/navigation";
 import api from "@/lib/api";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Toast from "@/components/ui/Toast";
+import {
+  MATERIAL_FILE_ACCEPT,
+  MATERIAL_FILE_HELP_TEXT,
+  validateMaterialFile,
+} from "@/lib/materialFiles";
 
 type Topic = {
   id: number;
@@ -382,7 +387,21 @@ const uploadMaterial = async () => {
 
     setNotification({
         type: "error",
-        message: "Please select a PDF file",
+        message: "Please select a material file",
+    });
+
+    return;
+  }
+
+  const validationError = validateMaterialFile(
+    materialFile
+  );
+
+  if (validationError) {
+
+    setNotification({
+        type: "error",
+        message: validationError,
     });
 
     return;
@@ -664,7 +683,7 @@ const toggleQuestionSelection = (
 
   <input
   type="file"
-  accept=".pdf"
+  accept={MATERIAL_FILE_ACCEPT}
   className="mb-4 w-full"
   onChange={(e) => {
 
@@ -672,22 +691,18 @@ const toggleQuestionSelection = (
 
     if (!file) return;
 
-    if (file.type !== "application/pdf") {
+    const validationError =
+      validateMaterialFile(file);
+
+    if (validationError) {
 
       setNotification({
         type: "error",
-        message: "Only PDF files are allowed.",
+        message: validationError,
       });
 
-      return;
-    }
-
-    if (file.size > 20 * 1024 * 1024) {
-
-      setNotification({
-        type: "error",
-        message: "File size must be less than 20MB.",
-      });
+      setMaterialFile(null);
+      e.target.value = "";
 
       return;
     }
@@ -696,6 +711,9 @@ const toggleQuestionSelection = (
 
   }}
 />
+  <p className="mb-4 text-sm text-gray-500">
+    {MATERIAL_FILE_HELP_TEXT}
+  </p>
   <button
     onClick={uploadMaterial}
     disabled={uploadingMaterial}
