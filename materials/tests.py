@@ -78,14 +78,14 @@ class MaterialTextServiceTests(TestCase):
         self,
         mock_extract_pdf_text
     ):
-        mock_extract_pdf_text.return_value = "PDF text"
+        mock_extract_pdf_text.return_value = "PDF\x00 text\n✓"
 
         text = extract_material_text(
             "/tmp/lecture.pdf",
             "pdf"
         )
 
-        self.assertEqual(text, "PDF text")
+        self.assertEqual(text, "PDF text\n✓")
         mock_extract_pdf_text.assert_called_once_with(
             "/tmp/lecture.pdf"
         )
@@ -95,7 +95,7 @@ class MaterialTextServiceTests(TestCase):
             suffix=".txt"
         ) as text_file:
             text_file.write(
-                "Plain text learning material".encode("utf-8")
+                "Plain\x00 text learning material\n✓".encode("utf-8")
             )
             text_file.flush()
 
@@ -104,11 +104,11 @@ class MaterialTextServiceTests(TestCase):
                     text_file.name,
                     "txt"
                 ),
-                "Plain text learning material"
+                "Plain text learning material\n✓"
             )
 
     def test_md_extraction_preserves_markdown_structure(self):
-        markdown = "# Heading\n\n## Subheading\n\nUseful details."
+        markdown = "# Heading\n\n## Subheading\x00\n\nUseful details. ✓"
 
         with tempfile.NamedTemporaryFile(
             suffix=".md"
@@ -123,7 +123,7 @@ class MaterialTextServiceTests(TestCase):
                     markdown_file.name,
                     "md"
                 ),
-                markdown
+                "# Heading\n\n## Subheading\n\nUseful details. ✓"
             )
 
 

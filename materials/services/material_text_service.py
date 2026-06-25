@@ -56,10 +56,14 @@ def is_supported_material_file(uploaded_file):
 
 def extract_material_text(file_path, material_type):
     if material_type == "pdf":
-        return extract_pdf_text(file_path)
+        return _sanitize_extracted_text(
+            extract_pdf_text(file_path)
+        )
 
     if material_type in {"txt", "md"}:
-        return _read_text_file(file_path)
+        return _sanitize_extracted_text(
+            _read_text_file(file_path)
+        )
 
     raise ValueError("Unsupported material file type.")
 
@@ -69,3 +73,7 @@ def _read_text_file(file_path):
         content = text_file.read()
 
     return content.decode("utf-8-sig", errors="replace")
+
+
+def _sanitize_extracted_text(text):
+    return text.replace("\x00", "")
