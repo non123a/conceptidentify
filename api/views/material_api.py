@@ -1,9 +1,19 @@
+import time
+from threading import Thread
+
+from django.db import close_old_connections, transaction
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db import transaction, close_old_connections
-from threading import Thread
-from materials.models import MaterialChunk
+
+from api.permissions import IsLecturer, is_topic_owner
+from courses.models import Course, Enrollment
+from materials.models import (
+    Material,
+    MaterialChunk,
+    MaterialProcessingStatus,
+)
 from materials.services.chunk_service import chunk_text
 from materials.services.embedding_service import generate_embedding
 from materials.services.material_text_service import (
@@ -11,32 +21,19 @@ from materials.services.material_text_service import (
     get_supported_material_type,
     is_supported_material_file,
 )
-from api.permissions import IsLecturer, is_topic_owner
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-)
-
-from rest_framework.permissions import (
-    IsAuthenticated,
-)
-from django.shortcuts import get_object_or_404
-from rest_framework.response import Response
-
-from materials.models import Material
-
-from materials.serializers import (
-    MaterialSerializer,
-)
-
-from courses.models import (
-    Course,
-    Enrollment,
-)
-# from courses.models import Material
 from topics.models import Topic
 
-from materials.models import Material, MaterialChunk, MaterialProcessingStatus
+
+def _log_elapsed(label, started_at, prefix="UPLOAD TIMING"):
+
+    elapsed_ms = (time.perf_counter() - started_at) * 1000
+    print(f"[{prefix}] {label}: {elapsed_ms:.1f} ms")
+
+
+def _log_elapsed_s(label, started_at, prefix="BACKGROUND TIMING"):
+
+    elapsed_s = time.perf_counter() - started_at
+    print(f"[{prefix}] {label}: {elapsed_s:.3f} s")
 
 
 def _claim_material_for_processing(material_id):
@@ -72,7 +69,7 @@ def _claim_material_for_processing(material_id):
         return material
 
 
-def _start_material_processing(material_id, file_path, material_type):
+def _start_material_processing(material_id, file_path, material_type, started_at=None):
 
     material = _claim_material_for_processing(material_id)
 
@@ -89,6 +86,10 @@ def _start_material_processing(material_id, file_path, material_type):
         )
         thread.start()
 
+        if started_at is not None:
+
+            _log_elapsed("Background processing thread started", started_at)
+
         return True
 
     except Exception as e:
@@ -103,18 +104,22 @@ def _start_material_processing(material_id, file_path, material_type):
         return False
 
 
-def _schedule_material_processing(material_id, file_path, material_type):
+def _schedule_material_processing(material_id, file_path, material_type, started_at=None):
 
     transaction.on_commit(
         lambda: _start_material_processing(
             material_id,
             file_path,
             material_type,
+            started_at,
         )
     )
 
 
 def _process_material_pipeline(material_id, file_path, material_type):
+
+    background_started_at = time.perf_counter()
+    _log_elapsed_s("Background thread started", background_started_at)
 
     close_old_connections()
 
@@ -122,16 +127,21 @@ def _process_material_pipeline(material_id, file_path, material_type):
 
         material = Material.objects.get(id=material_id)
 
+        extraction_started_at = time.perf_counter()
         extracted_text = extract_material_text(
             file_path,
             material_type,
         )
+        _log_elapsed_s("Text extraction", extraction_started_at)
 
+        chunk_started_at = time.perf_counter()
         material.extracted_text = extracted_text
         material.save(update_fields=["extracted_text"])
 
         chunks = chunk_text(extracted_text)
+        _log_elapsed_s("Chunk generation", chunk_started_at)
 
+        embedding_started_at = time.perf_counter()
         for index, chunk in enumerate(chunks):
 
             embedding = generate_embedding(chunk)
@@ -142,10 +152,15 @@ def _process_material_pipeline(material_id, file_path, material_type):
                 chunk_text=chunk,
                 embedding=embedding,
             )
+        _log_elapsed_s("Embedding generation and database inserts", embedding_started_at)
 
+        status_started_at = time.perf_counter()
         material.processing_status = MaterialProcessingStatus.READY
         material.processing_error = ""
         material.save(update_fields=["processing_status", "processing_error"])
+        _log_elapsed_s("Status update to READY", status_started_at)
+
+        _log_elapsed_s("Background processing completed", background_started_at)
 
     except Exception as e:
 
@@ -176,15 +191,16 @@ def _process_material_pipeline(material_id, file_path, material_type):
 @permission_classes([IsAuthenticated, IsLecturer])
 def upload_material(request):
 
+    request_started_at = time.perf_counter()
+    _log_elapsed("HTTP request received", request_started_at)
+
     title = request.data.get('title')
     topic_id = request.data.get('topic_id')
 
     file = request.FILES.get('file')
 
-    if not file:
-        return Response({
-            "error": "No file uploaded"
-        }, status=400)
+    _log_elapsed("Request body/file upload completed", request_started_at)
+
     if not file:
         return Response({
             "error": "No file uploaded"
@@ -195,6 +211,7 @@ def upload_material(request):
     )
 
     if not is_supported_material_file(file):
+        _log_elapsed("File validation", request_started_at)
         return Response(
             {
                 "error":
@@ -202,6 +219,8 @@ def upload_material(request):
             },
             status=400
         )
+
+    _log_elapsed("File validation", request_started_at)
 
     # Size validation (20MB)
     if file.size > 20 * 1024 * 1024:
@@ -226,6 +245,7 @@ def upload_material(request):
             "error": "You are not the instructor for this course",
         }, status=403)
 
+    transaction_started_at = time.perf_counter()
     with transaction.atomic():
 
         material = Material.objects.create(
@@ -236,15 +256,23 @@ def upload_material(request):
             processing_status=MaterialProcessingStatus.PENDING,
             processing_error="",
         )
+        _log_elapsed("Material database record created", request_started_at)
 
         material_id = material.id
         file_path = material.file.path
+
+        _log_elapsed("File saved to disk", request_started_at)
 
         _schedule_material_processing(
             material_id,
             file_path,
             material_type,
+            request_started_at,
         )
+
+    _log_elapsed("Transaction commit", transaction_started_at)
+
+    _log_elapsed("HTTP response returned", request_started_at)
 
     return Response({
         "message": "Material uploaded successfully",
