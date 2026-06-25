@@ -2,7 +2,7 @@ export const MATERIAL_FILE_ACCEPT =
   ".pdf,.txt,.md";
 
 export const MATERIAL_FILE_HELP_TEXT =
-  "Supported file types: PDF, TXT, or Markdown (.md). Maximum size: 20MB.";
+  "Supported file types: PDF, TXT, or Markdown (.md). Maximum size: 5MB.";
 
 export const MATERIAL_FILE_ERROR =
   "Only PDF, TXT, and Markdown files are allowed.";
