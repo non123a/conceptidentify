@@ -15,6 +15,7 @@ from materials.models import (
     MaterialChunk,
     MaterialProcessingStatus,
 )
+from materials.serializers import MaterialSerializer
 from materials.services.chunk_service import chunk_text
 from materials.services.embedding_service import generate_embedding
 from materials.services.material_text_service import (
