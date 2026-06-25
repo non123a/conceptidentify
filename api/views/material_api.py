@@ -1,5 +1,6 @@
 import time
 from threading import Thread
+import traceback
 
 from django.db import close_old_connections, transaction
 from django.shortcuts import get_object_or_404
@@ -450,6 +451,56 @@ def topic_materials(request, topic_id):
             id=topic_id
         )
 
+        course = topic.course
+
+        # Lecturer ownership check
+        if request.user.role == "lecturer":
+
+            if course.lecturer != request.user:
+
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Access denied."
+                    },
+                    status=403
+                )
+
+        # Student enrollment check
+        else:
+
+            is_enrolled = Enrollment.objects.filter(
+                student=request.user,
+                course=course
+            ).exists()
+
+            if not is_enrolled:
+
+                return Response(
+                    {
+                        "success": False,
+                        "message":
+                        "You are not enrolled in this course."
+                    },
+                    status=403
+                )
+
+        materials = Material.objects.filter(
+            topic=topic
+        ).order_by("-uploaded_at")
+
+        serializer = MaterialSerializer(
+            materials,
+            many=True
+        )
+
+        return Response(
+            {
+                "success": True,
+                "data": serializer.data,
+            }
+        )
+
     except Topic.DoesNotExist:
 
         return Response(
@@ -460,55 +511,19 @@ def topic_materials(request, topic_id):
             status=404
         )
 
-    course = topic.course
+    except Exception as e:
 
-    # Lecturer ownership check
-    if request.user.role == "lecturer":
+        traceback.print_exc()
 
-        if course.lecturer != request.user:
-
-            return Response(
-                {
-                    "success": False,
-                    "message": "Access denied."
-                },
-                status=403
-            )
-
-    # Student enrollment check
-    else:
-
-        is_enrolled = Enrollment.objects.filter(
-            student=request.user,
-            course=course
-        ).exists()
-
-        if not is_enrolled:
-
-            return Response(
-                {
-                    "success": False,
-                    "message":
-                    "You are not enrolled in this course."
-                },
-                status=403
-            )
-
-    materials = Material.objects.filter(
-        topic=topic
-    ).order_by("-uploaded_at")
-
-    serializer = MaterialSerializer(
-        materials,
-        many=True
-    )
-
-    return Response(
-        {
-            "success": True,
-            "data": serializer.data,
-        }
-    )
+        return Response(
+            {
+                "success": False,
+                "error": str(e),
+                "exception": repr(e),
+                "traceback": traceback.format_exc(),
+            },
+            status=500,
+        )
 
 
 @api_view(["DELETE"])
