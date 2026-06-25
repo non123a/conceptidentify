@@ -38,6 +38,8 @@ from api.views.material_api import (
 from api.views.material_api import (
     upload_material,
     course_materials,
+    material_status,
+    retry_material_processing,
 )
 
 from api.views.student_api import (
@@ -72,6 +74,16 @@ urlpatterns = [
         "materials/upload/",
         upload_material,
         name="upload_material",
+    ),
+    path(
+        "materials/<int:material_id>/status/",
+        material_status,
+        name="material_status",
+    ),
+    path(
+        "materials/<int:material_id>/retry-processing/",
+        retry_material_processing,
+        name="retry_material_processing",
     ),
     path(
         "courses/<int:course_id>/",

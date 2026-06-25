@@ -1,6 +1,8 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.db import transaction, close_old_connections
+from threading import Thread
 from materials.models import MaterialChunk
 from materials.services.chunk_service import chunk_text
 from materials.services.embedding_service import generate_embedding
@@ -34,7 +36,73 @@ from courses.models import (
 # from courses.models import Material
 from topics.models import Topic
 
-from materials.models import Material
+from materials.models import Material, MaterialChunk, MaterialProcessingStatus
+
+
+def _schedule_material_processing(material_id, file_path, material_type):
+
+    transaction.on_commit(
+        lambda: Thread(
+            target=_process_material_pipeline,
+            args=(material_id, file_path, material_type),
+            daemon=True,
+        ).start()
+    )
+
+
+def _process_material_pipeline(material_id, file_path, material_type):
+
+    close_old_connections()
+
+    try:
+
+        material = Material.objects.get(id=material_id)
+        material.processing_status = MaterialProcessingStatus.PROCESSING
+        material.processing_error = ""
+        material.save(update_fields=["processing_status", "processing_error"])
+
+        extracted_text = extract_material_text(
+            file_path,
+            material_type,
+        )
+
+        material.extracted_text = extracted_text
+        material.save(update_fields=["extracted_text"])
+
+        chunks = chunk_text(extracted_text)
+
+        for index, chunk in enumerate(chunks):
+
+            embedding = generate_embedding(chunk)
+
+            MaterialChunk.objects.create(
+                material=material,
+                chunk_index=index,
+                chunk_text=chunk,
+                embedding=embedding,
+            )
+
+        material.processing_status = MaterialProcessingStatus.READY
+        material.processing_error = ""
+        material.save(update_fields=["processing_status", "processing_error"])
+
+    except Exception as e:
+
+        try:
+
+            material = Material.objects.get(id=material_id)
+            material.processing_status = MaterialProcessingStatus.FAILED
+            material.processing_error = str(e)
+            material.save(update_fields=["processing_status", "processing_error"])
+
+        except Exception:
+
+            print("Material extraction failed:", e)
+
+    finally:
+
+        close_old_connections()
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsLecturer])
 def upload_material(request):
@@ -89,50 +157,121 @@ def upload_material(request):
             "error": "You are not the instructor for this course",
         }, status=403)
 
-    material = Material.objects.create(
-    topic=topic,
-    title=title,
-    file=file,
-    uploaded_by=request.user
-    )
+    with transaction.atomic():
 
-    # Extract text and reuse the existing chunking/vector pipeline.
-    try:
-        extracted_text = extract_material_text(
-            material.file.path,
-            material_type
+        material = Material.objects.create(
+            topic=topic,
+            title=title,
+            file=file,
+            uploaded_by=request.user,
+            processing_status=MaterialProcessingStatus.PENDING,
+            processing_error="",
         )
 
-        material.extracted_text = extracted_text
-        material.save()
-                # Create chunks
-        chunks = chunk_text(extracted_text)
+        material_id = material.id
+        file_path = material.file.path
 
-        for index, chunk in enumerate(chunks):
-
-            # MaterialChunk.objects.create(
-            #     material=material,
-            #     chunk_index=index,
-            #     chunk_text=chunk
-            # )
-
-            embedding = generate_embedding(chunk)
-
-            MaterialChunk.objects.create(
-                material=material,
-                chunk_index=index,
-                chunk_text=chunk,
-                embedding=embedding
-            )
-
-    except Exception as e:
-        print("Material extraction failed:", e)
+        _schedule_material_processing(
+            material_id,
+            file_path,
+            material_type,
+        )
 
     return Response({
         "message": "Material uploaded successfully",
         "material_id": material.id,
         "title": material.title,
+        "processing_status": material.processing_status,
     })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def material_status(request, material_id):
+
+    material = get_object_or_404(Material, id=material_id)
+
+    if request.user.role == "lecturer":
+
+        if material.uploaded_by != request.user and not is_topic_owner(request.user, material.topic):
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Access denied.",
+                },
+                status=403,
+            )
+
+    return Response(
+        {
+            "success": True,
+            "data": {
+                "id": material.id,
+                "title": material.title,
+                "processing_status": material.processing_status,
+                "processing_error": material.processing_error,
+                "uploaded_at": material.uploaded_at,
+            },
+        }
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated, IsLecturer])
+def retry_material_processing(request, material_id):
+
+    material = get_object_or_404(Material, id=material_id)
+
+    if not is_topic_owner(request.user, material.topic):
+
+        return Response(
+            {
+                "success": False,
+                "error": "You are not the instructor for this course",
+            },
+            status=403,
+        )
+
+    if material.processing_status != MaterialProcessingStatus.FAILED:
+
+        return Response(
+            {
+                "success": False,
+                "message": "Only failed materials can be retried.",
+            },
+            status=400,
+        )
+
+    MaterialChunk.objects.filter(material=material).delete()
+
+    material.processing_status = MaterialProcessingStatus.PENDING
+    material.processing_error = ""
+    material.extracted_text = None
+    material.save(
+        update_fields=[
+            "processing_status",
+            "processing_error",
+            "extracted_text",
+        ]
+    )
+
+    _schedule_material_processing(
+        material.id,
+        material.file.path,
+        get_supported_material_type(material.file.name),
+    )
+
+    return Response(
+        {
+            "success": True,
+            "message": "Material processing restarted.",
+            "data": {
+                "id": material.id,
+                "processing_status": material.processing_status,
+            },
+        }
+    )
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

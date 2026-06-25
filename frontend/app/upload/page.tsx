@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import RoleGuard from "@/components/RoleGuard";
 import api from "@/lib/api";
 import {
@@ -9,12 +9,64 @@ import {
   validateMaterialFile,
 } from "@/lib/materialFiles";
 
+type MaterialStatus =
+  | "PENDING"
+  | "PROCESSING"
+  | "READY"
+  | "FAILED";
+
 export default function UploadPage() {
   const [title, setTitle] = useState("");
   const [topicId, setTopicId] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
   const [message, setMessage] = useState("");
+  const [materialId, setMaterialId] = useState<number | null>(null);
+  const [processingStatus, setProcessingStatus] =
+    useState<MaterialStatus | null>(null);
+  const [processingError, setProcessingError] = useState("");
+  const [polling, setPolling] = useState(false);
+  const pollTimerRef = useRef<number | null>(null);
+
+  const clearPollTimer = () => {
+    if (pollTimerRef.current !== null) {
+      window.clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+  };
+
+  const fetchMaterialStatus = async (id: number) => {
+    const response = await api.get(`/materials/${id}/status/`);
+    const status = response.data.data.processing_status as MaterialStatus;
+
+    setProcessingStatus(status);
+    setProcessingError(response.data.data.processing_error || "");
+
+    if (status === "READY") {
+      setMessage("Material processing complete.");
+      setPolling(false);
+      clearPollTimer();
+    }
+
+    if (status === "FAILED") {
+      setMessage("Material processing failed. You can retry.");
+      setPolling(false);
+      clearPollTimer();
+    }
+  };
+
+  const startPolling = (id: number) => {
+    clearPollTimer();
+    setPolling(true);
+    void fetchMaterialStatus(id);
+    pollTimerRef.current = window.setInterval(() => {
+      void fetchMaterialStatus(id);
+    }, 2000);
+  };
+
+  useEffect(() => {
+    return () => clearPollTimer();
+  }, []);
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,10 +96,34 @@ export default function UploadPage() {
         );
 
         setMessage(response.data.message);
+        setMaterialId(response.data.material_id);
+        setProcessingStatus(response.data.processing_status || "PENDING");
+        setProcessingError("");
+
+        if (response.data.material_id) {
+          startPolling(response.data.material_id);
+        }
 
     } catch (error) {
       console.error(error);
       setMessage("Upload failed");
+    }
+  };
+
+  const retryProcessing = async () => {
+    if (!materialId) {
+      return;
+    }
+
+    try {
+      setMessage("Retrying processing...");
+      await api.post(`/materials/${materialId}/retry-processing/`);
+      setProcessingStatus("PENDING");
+      setProcessingError("");
+      startPolling(materialId);
+    } catch (error) {
+      console.error(error);
+      setMessage("Retry failed");
     }
   };
 
@@ -110,10 +186,36 @@ export default function UploadPage() {
         <button
           type="submit"
           className="ci-button-primary"
+          disabled={polling}
         >
           Upload
         </button>
       </form>
+
+      {processingStatus && (
+        <div className="mt-4 rounded border bg-white p-4">
+          <p className="font-semibold">Processing status: {processingStatus}</p>
+          {processingStatus === "PENDING" || processingStatus === "PROCESSING" ? (
+            <p className="mt-2 text-sm text-gray-600">
+              Material is still being processed. Please try again shortly.
+            </p>
+          ) : null}
+          {processingError && (
+            <p className="mt-2 text-sm text-red-600">
+              {processingError}
+            </p>
+          )}
+          {processingStatus === "FAILED" && (
+            <button
+              type="button"
+              onClick={retryProcessing}
+              className="ci-button-secondary mt-3"
+            >
+              Retry processing
+            </button>
+          )}
+        </div>
+      )}
 
       {message && (
         <p className="mt-4">

@@ -17,6 +17,8 @@ class MaterialSerializer(serializers.ModelSerializer):
             "file",
             "uploaded_at",
             "uploaded_by_name",
+            "processing_status",
+            "processing_error",
         ]
 
     def get_uploaded_by_name(self, obj):

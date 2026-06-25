@@ -23,7 +23,7 @@ from assessments.models import (
     Choice,
 )
 from topics.models import Topic
-from materials.models import Material
+from materials.models import Material, MaterialProcessingStatus
 from services.ai.question_generator import generate_questions
 
 from assessments.serializers import (
@@ -152,6 +152,29 @@ def generate_topic_questions(request, topic_id):
     materials = Material.objects.filter(
         topic=topic
     )
+
+    if materials.exists() and materials.exclude(
+        processing_status=MaterialProcessingStatus.READY
+    ).exists():
+
+        if materials.filter(
+            processing_status=MaterialProcessingStatus.FAILED
+        ).exists():
+            return Response(
+                {
+                    "success": False,
+                    "message": "Material processing failed. Please retry the upload before generating questions.",
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        return Response(
+            {
+                "success": False,
+                "message": "Material is still being processed. Please try again shortly.",
+            },
+            status=status.HTTP_409_CONFLICT,
+        )
 
     material_text = " ".join([
         material.extracted_text or ""

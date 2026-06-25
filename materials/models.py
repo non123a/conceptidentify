@@ -3,6 +3,14 @@ from topics.models import Topic
 from users.models import User
 from pgvector.django import VectorField
 
+
+class MaterialProcessingStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending"
+    PROCESSING = "PROCESSING", "Processing"
+    READY = "READY", "Ready"
+    FAILED = "FAILED", "Failed"
+
+
 class Material(models.Model):
     topic = models.ForeignKey(
         Topic,
@@ -19,6 +27,15 @@ class Material(models.Model):
             blank=True,
             null=True
             )
+    processing_status = models.CharField(
+        max_length=20,
+        choices=MaterialProcessingStatus.choices,
+        default=MaterialProcessingStatus.PENDING,
+    )
+    processing_error = models.TextField(
+        blank=True,
+        default="",
+    )
     uploaded_by = models.ForeignKey(
         User,
         on_delete=models.CASCADE
