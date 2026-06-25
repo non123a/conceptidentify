@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import RoleGuard from "@/components/RoleGuard";
 import { useParams } from "next/navigation";
 
@@ -13,6 +13,12 @@ import {
   MATERIAL_FILE_HELP_TEXT,
   validateMaterialFile,
 } from "@/lib/materialFiles";
+import {
+  MATERIAL_PROCESSING_MESSAGES,
+  MATERIAL_STILL_PROCESSING_MESSAGE,
+  MaterialStatus,
+  isMaterialProcessing,
+} from "@/lib/materialStatus";
 
 type Topic = {
   id: number;
@@ -26,6 +32,8 @@ type Material = {
   file: string;
   uploaded_at: string;
   uploaded_by_name: string;
+  processing_status: MaterialStatus;
+  processing_error?: string;
 };
 type GeneratedQuestion = {
   question: string;
@@ -34,9 +42,23 @@ type GeneratedQuestion = {
   correct_answer?: string;
   reference_answer?: string;
 };
+
+const getMaterialStatusClassName = (status: MaterialStatus) => {
+  if (status === "READY") {
+    return "border-green-200 bg-green-50 text-green-700";
+  }
+
+  if (status === "FAILED") {
+    return "border-red-200 bg-red-50 text-red-700";
+  }
+
+  return "border-amber-200 bg-amber-50 text-amber-700";
+};
+
 export default function CreatePage() {
 
   const params = useParams();
+  const topicId = params.topicId as string;
 
   const [topic, setTopic] =
     useState<Topic | null>(null);
@@ -112,25 +134,35 @@ const [selectedGeneratedIndex, setSelectedGeneratedIndex] =
       type: "success" | "error";
     } | null>(null);
 
-  useEffect(() => {
-    
-    fetchPage();
+  const hasProcessingMaterial = materials.some((material) =>
+    isMaterialProcessing(material.processing_status)
+  );
+  const hasFailedMaterial = materials.some(
+    (material) => material.processing_status === "FAILED"
+  );
+  const allMaterialsReady = materials.every(
+    (material) => material.processing_status === "READY"
+  );
+  const disableAiGeneration =
+    generatingAi ||
+    (materials.length > 0 && !allMaterialsReady);
 
-  }, []);
-  useEffect(() => {
+  const fetchMaterials = useCallback(async () => {
 
-    if (!notification) return;
+    const materialsResponse = await api.get(
+      `/topics/${topicId}/materials/`
+    );
 
-    const timer = setTimeout(() => {
+    const nextMaterials =
+      materialsResponse.data.data as Material[];
 
-      setNotification(null);
+    setMaterials(nextMaterials);
 
-    }, 3000);
+    return nextMaterials;
 
-    return () => clearTimeout(timer);
+  }, [topicId]);
 
-  }, [notification]);
-  const fetchPage = async () => {
+  const fetchPage = useCallback(async () => {
 
     try {
 
@@ -140,11 +172,11 @@ const [selectedGeneratedIndex, setSelectedGeneratedIndex] =
       ] = await Promise.all([
 
         api.get(
-          `/topics/${params.topicId}/`
+          `/topics/${topicId}/`
         ),
 
         api.get(
-          `/topics/${params.topicId}/materials/`
+          `/topics/${topicId}/materials/`
         ),
 
       ]);
@@ -166,8 +198,39 @@ const [selectedGeneratedIndex, setSelectedGeneratedIndex] =
       setLoading(false);
 
     }
-  };
+  }, [topicId]);
 
+  useEffect(() => {
+    
+    void Promise.resolve().then(() => fetchPage());
+
+  }, [fetchPage]);
+  useEffect(() => {
+
+    if (!hasProcessingMaterial) return;
+
+    const timer = window.setInterval(() => {
+
+      void fetchMaterials();
+
+    }, 4000);
+
+    return () => window.clearInterval(timer);
+
+  }, [fetchMaterials, hasProcessingMaterial]);
+  useEffect(() => {
+
+    if (!notification) return;
+
+    const timer = setTimeout(() => {
+
+      setNotification(null);
+
+    }, 3000);
+
+    return () => clearTimeout(timer);
+
+  }, [notification]);
   const createQuestion = async () => {
     if (!questionText.trim()) {
       setNotification({
@@ -249,9 +312,22 @@ const [selectedGeneratedIndex, setSelectedGeneratedIndex] =
   };
   const generateAiQuestions = async () => {
 
+  if (materials.length > 0 && !allMaterialsReady) {
+
+    setGenerateError(
+      hasProcessingMaterial
+        ? MATERIAL_STILL_PROCESSING_MESSAGE
+        : MATERIAL_PROCESSING_MESSAGES.FAILED
+    );
+
+    return;
+
+  }
+
   try {
 
     setGeneratingAi(true);
+    setGenerateError("");
     console.log(
     `/topics/${params.topicId}/generate/`
     );
@@ -273,12 +349,31 @@ const [selectedGeneratedIndex, setSelectedGeneratedIndex] =
       response.data.questions
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
 
     // console.error(error);
 
+    const responseStatus =
+      (
+        error as {
+          response?: { status?: number };
+        }
+      ).response?.status;
+
     if (
-      error.response?.status === 503
+      responseStatus === 409
+    ) {
+
+      setGenerateError(
+        MATERIAL_STILL_PROCESSING_MESSAGE
+      );
+
+      return;
+
+    }
+
+    if (
+      responseStatus === 503
     ) {
 
       setGenerateError(
@@ -420,7 +515,7 @@ const uploadMaterial = async () => {
 
     formData.append(
       "topic_id",
-      params.topicId as string
+      topicId
     );
 
     formData.append(
@@ -428,7 +523,7 @@ const uploadMaterial = async () => {
       materialFile
     );
 
-    await api.post(
+    const response = await api.post(
       "/materials/upload/",
       formData
     );
@@ -436,11 +531,14 @@ const uploadMaterial = async () => {
     setMaterialTitle("");
     setMaterialFile(null);
 
-    await fetchPage();
+    await fetchMaterials();
+
+    const status =
+      (response.data.processing_status as MaterialStatus) || "PENDING";
 
     setNotification({
         type: "success",
-        message: "Material uploaded successfully.",
+        message: MATERIAL_PROCESSING_MESSAGES[status],
     });
 
   } catch (error) {
@@ -758,6 +856,22 @@ const toggleQuestionSelection = (
 
                 </p>
 
+                <div
+                  className={`mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getMaterialStatusClassName(
+                    material.processing_status
+                  )}`}
+                >
+                  {material.processing_status}
+                </div>
+
+                <p className="mt-2 text-sm text-gray-600">
+                  {
+                    MATERIAL_PROCESSING_MESSAGES[
+                      material.processing_status
+                    ]
+                  }
+                </p>
+
                 <div className="mt-4 flex gap-4">
 
                   <a
@@ -865,7 +979,7 @@ const toggleQuestionSelection = (
 
             <button
             onClick={generateAiQuestions}
-            disabled={generatingAi}
+            disabled={disableAiGeneration}
             className="ci-button-primary"
             >
 
@@ -874,6 +988,22 @@ const toggleQuestionSelection = (
                 : "Generate AI Questions"}
 
             </button>
+
+            {hasProcessingMaterial && (
+
+              <p className="text-sm text-amber-700">
+                {MATERIAL_STILL_PROCESSING_MESSAGE}
+              </p>
+
+            )}
+
+            {!hasProcessingMaterial && hasFailedMaterial && (
+
+              <p className="text-sm text-red-600">
+                {MATERIAL_PROCESSING_MESSAGES.FAILED}
+              </p>
+
+            )}
 
         </div>
 
@@ -1033,7 +1163,10 @@ const toggleQuestionSelection = (
 
           <p className="font-semibold text-red-700">
 
-            AI service unavailable
+            {generateError === MATERIAL_STILL_PROCESSING_MESSAGE ||
+            generateError === MATERIAL_PROCESSING_MESSAGES.FAILED
+              ? "Question generation paused"
+              : "AI service unavailable"}
 
           </p>
 

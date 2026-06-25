@@ -8,12 +8,11 @@ import {
   MATERIAL_FILE_HELP_TEXT,
   validateMaterialFile,
 } from "@/lib/materialFiles";
-
-type MaterialStatus =
-  | "PENDING"
-  | "PROCESSING"
-  | "READY"
-  | "FAILED";
+import {
+  MATERIAL_PROCESSING_MESSAGES,
+  MaterialStatus,
+  isMaterialTerminal,
+} from "@/lib/materialStatus";
 
 export default function UploadPage() {
   const [title, setTitle] = useState("");
@@ -24,7 +23,6 @@ export default function UploadPage() {
   const [materialId, setMaterialId] = useState<number | null>(null);
   const [processingStatus, setProcessingStatus] =
     useState<MaterialStatus | null>(null);
-  const [processingError, setProcessingError] = useState("");
   const [polling, setPolling] = useState(false);
   const pollTimerRef = useRef<number | null>(null);
 
@@ -40,16 +38,7 @@ export default function UploadPage() {
     const status = response.data.data.processing_status as MaterialStatus;
 
     setProcessingStatus(status);
-    setProcessingError(response.data.data.processing_error || "");
-
-    if (status === "READY") {
-      setMessage("Material processing complete.");
-      setPolling(false);
-      clearPollTimer();
-    }
-
-    if (status === "FAILED") {
-      setMessage("Material processing failed. You can retry.");
+    if (isMaterialTerminal(status)) {
       setPolling(false);
       clearPollTimer();
     }
@@ -61,7 +50,7 @@ export default function UploadPage() {
     void fetchMaterialStatus(id);
     pollTimerRef.current = window.setInterval(() => {
       void fetchMaterialStatus(id);
-    }, 2000);
+    }, 4000);
   };
 
   useEffect(() => {
@@ -95,10 +84,12 @@ export default function UploadPage() {
             formData
         );
 
-        setMessage(response.data.message);
+        const status =
+          (response.data.processing_status as MaterialStatus) || "PENDING";
+
         setMaterialId(response.data.material_id);
-        setProcessingStatus(response.data.processing_status || "PENDING");
-        setProcessingError("");
+        setProcessingStatus(status);
+        setMessage("");
 
         if (response.data.material_id) {
           startPolling(response.data.material_id);
@@ -116,10 +107,9 @@ export default function UploadPage() {
     }
 
     try {
-      setMessage("Retrying processing...");
       await api.post(`/materials/${materialId}/retry-processing/`);
       setProcessingStatus("PENDING");
-      setProcessingError("");
+      setMessage("");
       startPolling(materialId);
     } catch (error) {
       console.error(error);
@@ -195,16 +185,9 @@ export default function UploadPage() {
       {processingStatus && (
         <div className="mt-4 rounded border bg-white p-4">
           <p className="font-semibold">Processing status: {processingStatus}</p>
-          {processingStatus === "PENDING" || processingStatus === "PROCESSING" ? (
-            <p className="mt-2 text-sm text-gray-600">
-              Material is still being processed. Please try again shortly.
-            </p>
-          ) : null}
-          {processingError && (
-            <p className="mt-2 text-sm text-red-600">
-              {processingError}
-            </p>
-          )}
+          <p className="mt-2 text-sm text-gray-600">
+            {MATERIAL_PROCESSING_MESSAGES[processingStatus]}
+          </p>
           {processingStatus === "FAILED" && (
             <button
               type="button"
