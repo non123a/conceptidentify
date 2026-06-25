@@ -55,8 +55,8 @@ export function validateMaterialFile(file: File) {
     return MATERIAL_FILE_ERROR;
   }
 
-  if (file.size > 20 * 1024 * 1024) {
-    return "File size must be less than 20MB.";
+  if (file.size > 5 * 1024 * 1024) {
+    return "File size must be less than 5MB.";
   }
 
   return null;
