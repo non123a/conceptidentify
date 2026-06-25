@@ -39,14 +39,78 @@ from topics.models import Topic
 from materials.models import Material, MaterialChunk, MaterialProcessingStatus
 
 
-def _schedule_material_processing(material_id, file_path, material_type):
+def _claim_material_for_processing(material_id):
 
-    transaction.on_commit(
-        lambda: Thread(
+    with transaction.atomic():
+
+        material = Material.objects.select_for_update().get(id=material_id)
+
+        if material.processing_status == MaterialProcessingStatus.PROCESSING:
+
+            return None
+
+        if material.processing_status not in {
+            MaterialProcessingStatus.PENDING,
+            MaterialProcessingStatus.FAILED,
+        }:
+
+            return None
+
+        MaterialChunk.objects.filter(material=material).delete()
+
+        material.extracted_text = None
+        material.processing_status = MaterialProcessingStatus.PROCESSING
+        material.processing_error = ""
+        material.save(
+            update_fields=[
+                "extracted_text",
+                "processing_status",
+                "processing_error",
+            ]
+        )
+
+        return material
+
+
+def _start_material_processing(material_id, file_path, material_type):
+
+    material = _claim_material_for_processing(material_id)
+
+    if not material:
+
+        return False
+
+    try:
+
+        thread = Thread(
             target=_process_material_pipeline,
             args=(material_id, file_path, material_type),
             daemon=True,
-        ).start()
+        )
+        thread.start()
+
+        return True
+
+    except Exception as e:
+
+        with transaction.atomic():
+
+            material = Material.objects.select_for_update().get(id=material_id)
+            material.processing_status = MaterialProcessingStatus.FAILED
+            material.processing_error = str(e)
+            material.save(update_fields=["processing_status", "processing_error"])
+
+        return False
+
+
+def _schedule_material_processing(material_id, file_path, material_type):
+
+    transaction.on_commit(
+        lambda: _start_material_processing(
+            material_id,
+            file_path,
+            material_type,
+        )
     )
 
 
@@ -57,9 +121,6 @@ def _process_material_pipeline(material_id, file_path, material_type):
     try:
 
         material = Material.objects.get(id=material_id)
-        material.processing_status = MaterialProcessingStatus.PROCESSING
-        material.processing_error = ""
-        material.save(update_fields=["processing_status", "processing_error"])
 
         extracted_text = extract_material_text(
             file_path,
@@ -91,9 +152,17 @@ def _process_material_pipeline(material_id, file_path, material_type):
         try:
 
             material = Material.objects.get(id=material_id)
+            MaterialChunk.objects.filter(material=material).delete()
+            material.extracted_text = None
             material.processing_status = MaterialProcessingStatus.FAILED
             material.processing_error = str(e)
-            material.save(update_fields=["processing_status", "processing_error"])
+            material.save(
+                update_fields=[
+                    "extracted_text",
+                    "processing_status",
+                    "processing_error",
+                ]
+            )
 
         except Exception:
 
@@ -181,7 +250,7 @@ def upload_material(request):
         "message": "Material uploaded successfully",
         "material_id": material.id,
         "title": material.title,
-        "processing_status": material.processing_status,
+        "processing_status": MaterialProcessingStatus.PENDING,
     })
 
 
@@ -233,7 +302,28 @@ def retry_material_processing(request, material_id):
             status=403,
         )
 
-    if material.processing_status != MaterialProcessingStatus.FAILED:
+    started = _start_material_processing(
+        material.id,
+        material.file.path,
+        get_supported_material_type(material.file.name),
+    )
+
+    if not started:
+
+        current_material = Material.objects.get(id=material.id)
+
+        if current_material.processing_status == MaterialProcessingStatus.PROCESSING:
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Material is already processing.",
+                    "data": {
+                        "id": current_material.id,
+                        "processing_status": current_material.processing_status,
+                    },
+                }
+            )
 
         return Response(
             {
@@ -243,32 +333,13 @@ def retry_material_processing(request, material_id):
             status=400,
         )
 
-    MaterialChunk.objects.filter(material=material).delete()
-
-    material.processing_status = MaterialProcessingStatus.PENDING
-    material.processing_error = ""
-    material.extracted_text = None
-    material.save(
-        update_fields=[
-            "processing_status",
-            "processing_error",
-            "extracted_text",
-        ]
-    )
-
-    _schedule_material_processing(
-        material.id,
-        material.file.path,
-        get_supported_material_type(material.file.name),
-    )
-
     return Response(
         {
             "success": True,
             "message": "Material processing restarted.",
             "data": {
                 "id": material.id,
-                "processing_status": material.processing_status,
+                "processing_status": MaterialProcessingStatus.PROCESSING,
             },
         }
     )
