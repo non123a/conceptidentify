@@ -2,7 +2,7 @@ export const MATERIAL_FILE_ACCEPT =
   ".pdf,.txt,.md";
 
 export const MATERIAL_FILE_HELP_TEXT =
-  "Supported file types: PDF, TXT, or Markdown (.md). Maximum size: 5MB.";
+  "Supported file types: PDF, TXT, or Markdown (.md). Maximum size: 20MB.";
 
 export const MATERIAL_FILE_ERROR =
   "Only PDF, TXT, and Markdown files are allowed.";
@@ -55,8 +55,8 @@ export function validateMaterialFile(file: File) {
     return MATERIAL_FILE_ERROR;
   }
 
-  if (file.size > 5 * 1024 * 1024) {
-    return "File size must be less than 5MB.";
+  if (file.size > 20 * 1024 * 1024) {
+    return "File size must be less than 20MB.";
   }
 
   return null;
