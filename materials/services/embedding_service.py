@@ -6,8 +6,17 @@ model = SentenceTransformer(
 )
 
 
-def generate_embedding(text):
+def generate_embeddings(texts):
+    embeddings = model.encode(
+        texts,
+        batch_size=32,
+        convert_to_numpy=True,
+        show_progress_bar=False,
+    )
 
-    embedding = model.encode(text)
+    return embeddings.tolist()
+# def generate_embedding(text):
 
-    return embedding.tolist()
+#     embedding = model.encode(text)
+
+#     return embedding.tolist()

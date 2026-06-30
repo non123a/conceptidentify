@@ -17,7 +17,7 @@ from materials.models import (
 )
 from materials.serializers import MaterialSerializer
 from materials.services.chunk_service import chunk_text
-from materials.services.embedding_service import generate_embedding
+from materials.services.embedding_service import generate_embedding, generate_embeddings
 from materials.services.material_text_service import (
     extract_material_text,
     get_supported_material_type,
@@ -161,16 +161,24 @@ def _process_material_pipeline(material_id, file_path, material_type):
         _log_elapsed_s("Chunk generation", background_started_at)
 
         embedding_started_at = time.perf_counter()
-        for index, chunk in enumerate(chunks):
-
-            embedding = generate_embedding(chunk)
-
+        embeddings = generate_embeddings(chunks)
+        for index, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
             MaterialChunk.objects.create(
                 material=material,
                 chunk_index=index,
                 chunk_text=chunk,
                 embedding=embedding,
             )
+        # for index, chunk in enumerate(chunks):
+
+        #     embedding = generate_embedding(chunk)
+
+        #     MaterialChunk.objects.create(
+        #         material=material,
+        #         chunk_index=index,
+        #         chunk_text=chunk,
+        #         embedding=embedding,
+        #     )
         _log_elapsed_s("Embedding generation and database inserts", background_started_at)
 
         status_started_at = time.perf_counter()
