@@ -17,7 +17,7 @@ from materials.models import (
 )
 from materials.serializers import MaterialSerializer
 from materials.services.chunk_service import chunk_text
-from materials.services.embedding_service import generate_embedding, generate_embeddings
+from materials.services.embedding_service import generate_embeddings
 from materials.services.material_text_service import (
     extract_material_text,
     get_supported_material_type,
