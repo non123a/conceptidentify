@@ -193,12 +193,14 @@ export default function Home() {
               <Link href="/register" className="ci-button-secondary">
                 Register
               </Link>
+              <link href="https://www.youtube.com/watch?v=WZKxHmlqKWg">
               <button
                 type="button"
                 className="ci-button-secondary border-slate-200 bg-white/90 text-slate-700"
               >
                 Watch Demo
               </button>
+              </link>
             </div>
           </div>
 

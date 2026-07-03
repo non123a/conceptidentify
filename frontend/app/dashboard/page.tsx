@@ -37,13 +37,7 @@ const [notification, setNotification] =
   } | null>(null);
 const [courseDescription, setCourseDescription] =
   useState("");
-  useEffect(() => {
-
-    fetchCourses();
-
-  }, []);
-
-  const fetchCourses = async () => {
+  async function fetchCourses() {
 
     try {
 
@@ -60,7 +54,13 @@ const [courseDescription, setCourseDescription] =
       console.error(error);
 
     }
-  };
+  }
+
+  useEffect(() => {
+
+    void Promise.resolve().then(fetchCourses);
+
+  }, []);
   const createCourse = async () => {
     if (!courseName.trim()) {
 
@@ -141,17 +141,24 @@ const joinCourse = async () => {
 };
   if (loading) {
     return (
-      <div className="ci-page">
-        Loading...
+      <div className="ci-loading-state ci-page min-h-[calc(100vh-73px)]">
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-sky-200 border-t-sky-600" />
+        <p className="text-sm font-medium text-slate-600">
+          Loading dashboard...
+        </p>
       </div>
     );
   }
 
   if (!user) {
-    console.log("Dashboard: user is null");
     return (
-      <div className="ci-page text-red-600">
-        Not logged in
+      <div className="ci-empty-state ci-page min-h-[calc(100vh-73px)]">
+        <p className="text-base font-semibold text-slate-950">
+          Not logged in
+        </p>
+        <p className="text-sm text-slate-600">
+          Please sign in again to access the dashboard.
+        </p>
       </div>
     );
   }
@@ -166,33 +173,40 @@ const joinCourse = async () => {
     />
 
   )}
-    <div className="ci-page">
+    <div className="ci-page space-y-8">
 
-      <h1 className="mb-6 text-3xl font-bold">
+      <h1 className="ci-title">
         Dashboard
       </h1>
 
-      <div className="ci-card p-6">
+      <div className="ci-card p-6 sm:p-8">
 
-        <p>
-          <strong>Name:</strong>{" "}
-          {user.first_name} {user.last_name}
-        </p>
-
-        <p>
-          <strong>Username:</strong>{" "}
-          {user.username}
-        </p>
-
-        <p>
-          <strong>Email:</strong>{" "}
-          {user.email}
-        </p>
-
-        <p>
-          <strong>Role:</strong>{" "}
-          {user.role}
-        </p>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div>
+            <p className="text-sm font-medium text-slate-500">Name</p>
+            <p className="mt-1 text-base font-semibold text-slate-950">
+              {user.first_name} {user.last_name}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-500">Username</p>
+            <p className="mt-1 text-base font-semibold text-slate-950">
+              {user.username}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-500">Email</p>
+            <p className="mt-1 text-base font-semibold text-slate-950 break-all">
+              {user.email}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-500">Role</p>
+            <p className="mt-1">
+              <span className="ci-badge ci-badge-neutral">{user.role}</span>
+            </p>
+          </div>
+        </div>
 
       </div>
       <div className="mt-10">
@@ -229,9 +243,14 @@ const joinCourse = async () => {
 
         {courses.length === 0 ? (
 
-          <div className="rounded border p-6 text-gray-500">
+          <div className="ci-empty-state">
 
-            No courses found.
+            <p className="text-base font-semibold text-slate-950">
+              No courses found.
+            </p>
+            <p className="text-sm text-slate-600">
+              Create a course or join one to see it here.
+            </p>
 
           </div>
 
@@ -244,18 +263,18 @@ const joinCourse = async () => {
               <Link
                 key={course.id}
                 href={`/courses/${course.id}`}
-                className="ci-card ci-card-hover p-6 transition"
+                className="ci-card ci-card-hover p-6 transition-all duration-300 hover:-translate-y-1"
               >
 
-                <h3 className="text-xl font-semibold">
+                <h3 className="text-lg font-semibold text-slate-950">
                   {course.name}
                 </h3>
 
-                <p className="mt-2 text-gray-600">
+                <p className="mt-2 text-sm leading-7 text-slate-600">
                   {course.description || "No description"}
                 </p>
 
-                <p className="mt-4 text-sm text-gray-500">
+                <p className="mt-4 text-sm text-slate-500">
                   Join Code: {course.join_code}
                 </p>
 
@@ -270,11 +289,11 @@ const joinCourse = async () => {
       </div>
 {showCreateModal && (
 
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-6">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-6 backdrop-blur-sm">
 
-    <div className="ci-card w-full max-w-md p-6">
+    <div className="ci-card w-full max-w-md rounded-3xl p-6 shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
 
-      <h2 className="mb-4 text-xl font-bold">
+      <h2 className="mb-4 text-xl font-semibold text-slate-950">
         Create Course
       </h2>
 
@@ -326,11 +345,11 @@ const joinCourse = async () => {
 }
 {showJoinModal && (
 
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-6">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-6 backdrop-blur-sm">
 
-    <div className="ci-card w-full max-w-md p-6">
+    <div className="ci-card w-full max-w-md rounded-3xl p-6 shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
 
-      <h2 className="mb-4 text-xl font-bold">
+      <h2 className="mb-4 text-xl font-semibold text-slate-950">
         Join Course
       </h2>
 

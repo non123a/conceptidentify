@@ -59,13 +59,13 @@ export default function Navbar() {
 
   return (
 
-    <nav className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur">
+    <nav className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
 
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
+      <div className="ci-page flex items-center justify-between gap-4 py-4">
 
         <Link
           href="/dashboard"
-          className="text-lg font-bold tracking-tight text-gray-900"
+          className="text-lg font-semibold tracking-tight text-slate-950"
         >
           ConceptIdentify
         </Link>
@@ -74,19 +74,19 @@ export default function Navbar() {
 
           <Link
             href="/dashboard"
-            className="rounded-lg px-3 py-2 font-medium text-gray-600 hover:bg-gray-100 hover:text-blue-600"
+            className="ci-button-secondary min-h-0 rounded-full px-4 py-2 text-sm"
           >
             Dashboard
           </Link>
 
           <Link
             href="/profile"
-            className="rounded-lg px-3 py-2 font-medium text-gray-600 hover:bg-gray-100 hover:text-blue-600"
+            className="ci-button-secondary min-h-0 rounded-full px-4 py-2 text-sm"
           >
             Profile
           </Link>
 
-          <span className="hidden text-sm text-gray-500 sm:inline">
+          <span className="ci-badge ci-badge-neutral hidden sm:inline-flex">
 
             {user.first_name} {user.last_name}
 
@@ -96,7 +96,7 @@ export default function Navbar() {
             onClick={() =>
               setLogoutConfirmOpen(true)
             }
-            className="ci-button-danger min-h-0 px-4 py-2"
+            className="ci-button-danger min-h-0 rounded-full px-4 py-2 text-sm"
           >
             Logout
           </button>

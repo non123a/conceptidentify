@@ -29,7 +29,7 @@ export default function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-6 backdrop-blur-sm"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !loading) {
@@ -42,14 +42,14 @@ export default function ConfirmDialog({
         role="alertdialog"
         aria-labelledby="confirm-dialog-title"
         aria-describedby="confirm-dialog-description"
-        className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+        className="ci-card w-full max-w-md rounded-3xl bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.18)]"
       >
         <div className="mb-4 flex justify-center">
           <div
             className={`flex h-12 w-12 items-center justify-center rounded-full text-xl font-semibold ${
               danger
-                ? "bg-red-50 text-red-600"
-                : "bg-blue-50 text-blue-600"
+                ? "bg-rose-50 text-rose-600"
+                : "bg-sky-50 text-sky-700"
             }`}
           >
             !
@@ -59,14 +59,14 @@ export default function ConfirmDialog({
         <div className="text-center">
           <h2
             id="confirm-dialog-title"
-            className="text-xl font-semibold text-gray-900"
+            className="text-xl font-semibold text-slate-950"
           >
             {title}
           </h2>
 
           <p
             id="confirm-dialog-description"
-            className="mt-3 text-sm leading-6 text-gray-600"
+            className="mt-3 text-sm leading-6 text-slate-600"
           >
             {description}
           </p>
@@ -77,7 +77,7 @@ export default function ConfirmDialog({
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="ci-button-secondary min-w-[120px]"
+            className="ci-button-secondary min-w-[120px] rounded-2xl"
           >
             {cancelText}
           </button>
@@ -86,7 +86,7 @@ export default function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className={`min-w-[120px] ${
+            className={`min-w-[120px] rounded-2xl ${
               danger
                 ? "ci-button-danger"
                 : "ci-button-primary"

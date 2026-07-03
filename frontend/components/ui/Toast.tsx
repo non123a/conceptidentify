@@ -10,12 +10,14 @@ export default function Toast({
 
   return (
     <div
-      className={`fixed top-20 right-6 z-50 rounded-xl px-5 py-4 shadow-lg border transition-all
+      className={`fixed top-20 right-6 z-50 max-w-sm rounded-2xl border px-5 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all
       ${
         type === "success"
-          ? "bg-green-50 border-green-300 text-green-700"
-          : "bg-red-50 border-red-300 text-red-700"
+          ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+          : "bg-rose-50 border-rose-200 text-rose-700"
       }`}
+      role="status"
+      aria-live="polite"
     >
       {message}
     </div>

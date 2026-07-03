@@ -1,17 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafafa;
-  --foreground: #111827;
+  --background: #f8fafc;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --border: #e5e7eb;
+  --border: #dbe3ef;
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --secondary: #6b7280;
-  --muted: #f3f4f6;
+  --primary-soft: #dbeafe;
+  --success: #0f766e;
+  --success-soft: #ccfbf1;
+  --warning: #b45309;
+  --warning-soft: #fef3c7;
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
+  --secondary: #475569;
+  --muted: #f1f5f9;
+  --surface: #eef2f7;
 }
 
 @theme inline {
@@ -22,9 +27,15 @@
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 28%),
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.06), transparent 24%),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 @layer base {
@@ -42,6 +53,7 @@ body {
     border-color: var(--border);
     background: var(--card);
     color: var(--foreground);
+    border-radius: 1rem;
     transition:
       border-color 150ms ease,
       box-shadow 150ms ease,
@@ -57,7 +69,7 @@ body {
   select:focus,
   textarea:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgb(37 99 235 / 0.12);
+    box-shadow: 0 0 0 4px rgb(37 99 235 / 0.12);
     outline: none;
   }
 
@@ -74,24 +86,32 @@ body {
   button:disabled,
   a[aria-disabled="true"] {
     cursor: not-allowed;
-    opacity: 0.55;
+    opacity: 0.62;
   }
 
   table {
     border-collapse: separate;
     border-spacing: 0;
     font-size: 0.875rem;
+    width: 100%;
   }
 
   th {
     background: var(--muted);
     color: var(--secondary);
     font-weight: 600;
+    text-transform: none;
   }
 
   td,
   th {
     border-bottom: 1px solid var(--border);
+    padding: 0.875rem 1rem;
+    vertical-align: middle;
+  }
+
+  tbody tr:hover {
+    background: rgba(241, 245, 249, 0.7);
   }
 }
 
@@ -126,38 +146,39 @@ body {
 
   .ci-title {
     color: var(--foreground);
-    font-size: 1.875rem;
+    font-size: 2rem;
     font-weight: 700;
     letter-spacing: 0;
-    line-height: 2.25rem;
+    line-height: 1.2;
   }
 
   .ci-section-title {
     color: var(--foreground);
     font-size: 1.25rem;
     font-weight: 600;
-    line-height: 1.75rem;
+    line-height: 1.5;
   }
 
   .ci-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 2px rgb(17 24 39 / 0.05);
+    border-radius: 1.25rem;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
   }
 
   .ci-card-hover:hover {
     border-color: #cbd5e1;
-    box-shadow: 0 8px 20px rgb(17 24 39 / 0.06);
-    transform: translateY(-1px);
+    box-shadow: 0 16px 34px rgb(15 23 42 / 0.08);
+    transform: translateY(-2px);
   }
 
   .ci-input {
     width: 100%;
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     border-width: 1px;
-    padding: 0.75rem 0.875rem;
-    font-size: 0.875rem;
+    padding: 0.85rem 1rem;
+    font-size: 0.9375rem;
+    min-height: 2.75rem;
   }
 
   .ci-button-primary,
@@ -167,20 +188,38 @@ body {
     align-items: center;
     border-radius: 0.75rem;
     display: inline-flex;
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     font-weight: 600;
     justify-content: center;
     min-height: 2.75rem;
-    padding: 0.625rem 1rem;
+    padding: 0.7rem 1.1rem;
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease,
+      box-shadow 150ms ease,
+      opacity 150ms ease,
+      transform 150ms ease;
+  }
+
+  .ci-button-primary:focus-visible,
+  .ci-button-secondary:focus-visible,
+  .ci-button-danger:focus-visible,
+  .ci-button-warning:focus-visible,
+  .ci-button-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgb(37 99 235 / 0.16);
   }
 
   .ci-button-primary {
     background: var(--primary);
     color: white;
+    box-shadow: 0 1px 2px rgb(37 99 235 / 0.16);
   }
 
   .ci-button-primary:hover {
     background: var(--primary-hover);
+    transform: translateY(-1px);
   }
 
   .ci-button-secondary {
@@ -191,6 +230,7 @@ body {
 
   .ci-button-secondary:hover {
     background: var(--muted);
+    transform: translateY(-1px);
   }
 
   .ci-button-danger {
@@ -200,6 +240,7 @@ body {
 
   .ci-button-danger:hover {
     background: #dc2626;
+    transform: translateY(-1px);
   }
 
   .ci-button-warning {
@@ -207,17 +248,104 @@ body {
     color: white;
   }
 
+  .ci-button-warning:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+  }
+
   .ci-alert {
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     border-width: 1px;
     padding: 1rem;
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
   }
 
   .ci-table-wrap {
     overflow-x: auto;
     border: 1px solid var(--border);
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     background: var(--card);
+  }
+
+  .ci-label {
+    display: inline-block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #334155;
+    margin-bottom: 0.5rem;
+  }
+
+  .ci-field-help {
+    font-size: 0.875rem;
+    color: #64748b;
+  }
+
+  .ci-badge {
+    align-items: center;
+    border-radius: 9999px;
+    display: inline-flex;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    padding: 0.45rem 0.75rem;
+    text-transform: uppercase;
+  }
+
+  .ci-badge-neutral {
+    background: var(--muted);
+    color: var(--secondary);
+  }
+
+  .ci-badge-ready,
+  .ci-badge-active,
+  .ci-badge-published {
+    background: var(--success-soft);
+    color: var(--success);
+  }
+
+  .ci-badge-processing,
+  .ci-badge-pending,
+  .ci-badge-draft {
+    background: var(--warning-soft);
+    color: var(--warning);
+  }
+
+  .ci-badge-failed,
+  .ci-badge-inactive {
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+
+  .ci-loading-state,
+  .ci-empty-state {
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    color: var(--secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    justify-content: center;
+    min-height: 10rem;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .ci-skeleton {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 37%, #e2e8f0 63%);
+    background-size: 400% 100%;
+    animation: ci-skeleton 1.4s ease infinite;
+    border-radius: 9999px;
+  }
+
+  @keyframes ci-skeleton {
+    0% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0 50%;
+    }
   }
 }

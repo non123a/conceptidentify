@@ -30,16 +30,22 @@ useEffect(() => {
 
 if (loading) {
   return (
-    <div className="ci-page">
-      Loading...
+    <div className="ci-loading-state ci-page min-h-[calc(100vh-73px)]">
+      <span className="h-5 w-5 animate-spin rounded-full border-2 border-sky-200 border-t-sky-600" />
+      <p className="text-sm font-medium text-slate-600">
+        Loading...
+      </p>
     </div>
   );
 }
 
 if (!user || user.role !== allowedRole) {
   return (
-    <div className="ci-page">
-      Redirecting...
+    <div className="ci-loading-state ci-page min-h-[calc(100vh-73px)]">
+      <span className="h-5 w-5 animate-spin rounded-full border-2 border-sky-200 border-t-sky-600" />
+      <p className="text-sm font-medium text-slate-600">
+        Redirecting...
+      </p>
     </div>
   );
 }

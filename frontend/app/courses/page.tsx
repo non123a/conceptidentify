@@ -24,13 +24,7 @@ export default function CoursesPage() {
 
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-
-    fetchCourses();
-
-  }, []);
-
-  const fetchCourses = async () => {
+  async function fetchCourses() {
 
     try {
 
@@ -51,42 +45,66 @@ export default function CoursesPage() {
       setLoading(false);
 
     }
-  };
+  }
+
+  useEffect(() => {
+
+    void Promise.resolve().then(fetchCourses);
+
+  }, []);
 
   if (loading) {
 
     return (
-      <div className="ci-page">
-        Loading courses...
+      <div className="ci-loading-state ci-page min-h-[calc(100vh-73px)]">
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-sky-200 border-t-sky-600" />
+        <p className="text-sm font-medium text-slate-600">
+          Loading courses...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="ci-page">
+    <div className="ci-page space-y-8">
 
-      <h1 className="mb-8 text-3xl font-bold">
+      <h1 className="ci-title">
         My Courses
       </h1>
 
-      <div className="grid gap-6">
+      {courses.length === 0 ? (
 
-        {courses.map((course) => (
+        <div className="ci-empty-state">
+
+          <p className="text-base font-semibold text-slate-950">
+            No courses available yet.
+          </p>
+          <p className="text-sm text-slate-600">
+            Join a course or create one from the dashboard.
+          </p>
+
+        </div>
+
+      ) : (
+
+        <div className="grid gap-6">
+
+          {courses.map((course) => (
 
           <div
             key={course.id}
-            className="ci-card p-6"
+            className="ci-card ci-card-hover p-6 transition-all duration-300 hover:-translate-y-1"
           >
 
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-lg font-semibold text-slate-950">
               {course.name}
             </h2>
 
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-sm leading-7 text-slate-600">
               {course.description || "No description"}
             </p>
 
-            <div className="mt-4 space-y-1 text-sm text-gray-500">
+            <div className="mt-4 space-y-2 text-sm text-slate-500">
 
               <p>
                 Lecturer:{" "}
@@ -106,9 +124,11 @@ export default function CoursesPage() {
 
           </div>
 
-        ))}
+          ))}
 
-      </div>
+        </div>
+
+      )}
 
     </div>
   );

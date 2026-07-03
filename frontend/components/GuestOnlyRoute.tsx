@@ -32,8 +32,11 @@ export default function GuestOnlyRoute({
 
   if (loading || user) {
     return (
-      <div className="ci-page">
-        Loading...
+      <div className="ci-loading-state ci-page min-h-[calc(100vh-73px)]">
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-sky-200 border-t-sky-600" />
+        <p className="text-sm font-medium text-slate-600">
+          Loading...
+        </p>
       </div>
     );
   }
