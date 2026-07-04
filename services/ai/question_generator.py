@@ -92,8 +92,10 @@ Custom Instruction:
 {custom_prompt}
 
 IF MCQ:
-- 4 choices
-- 1 correct answer
+- Generate exactly 4 choices.
+- The value of "correct_answer" MUST be the FULL TEXT of one of the choices.
+- NEVER return only "A", "B", "C", or "D".
+- The "correct_answer" must exactly match one item in the "choices" array.
 
 IF OPEN:
 - include reference_answer
@@ -211,6 +213,21 @@ Retrieved Learning Material:
     except Exception as e:
         print("❌ JSON ERROR:", e)
         return []
+    # =========================
+# Normalize MCQ correct_answer
+# =========================
+    if question_type == "mcq":
+        for question in data:
+            answer = question.get("correct_answer", "").strip()
+            choices = question.get("choices", [])
+
+            # Gemini returned only A/B/C/D
+            if len(answer) == 1 and answer.upper() in ["A", "B", "C", "D"]:
+
+                index = ord(answer.upper()) - ord("A")
+
+                if index < len(choices):
+                    question["correct_answer"] = choices[index]
 
     print("\n✅ FINAL QUESTIONS:", data)
     print("================ GENERATE AI END ================\n")
