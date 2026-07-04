@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import StudentLearningMaterialsSection from "@/components/topic/StudentLearningMaterialsSection";
 
 type Topic = {
   id: number;
@@ -22,6 +23,13 @@ type DiagnosticStatus = {
   practiceCount: number;
   loading: boolean;
   error: string | null;
+};
+
+type StudentMaterial = {
+  id: number;
+  title: string;
+  file: string;
+  uploaded_at: string;
 };
 
 export default function TopicPage() {
@@ -43,6 +51,12 @@ export default function TopicPage() {
       loading: true,
       error: null,
     });
+
+  const [materials, setMaterials] =
+    useState<StudentMaterial[]>([]);
+
+  const [materialsLoading, setMaterialsLoading] =
+    useState(false);
 
   // ====================================
   // FETCH TOPIC DATA
@@ -126,12 +140,45 @@ export default function TopicPage() {
     }
   };
 
+  const fetchLearningMaterials = async () => {
+
+    if (user?.role !== "student") {
+
+      return;
+
+    }
+
+    try {
+
+      setMaterialsLoading(true);
+
+      const materialsResponse = await api.get(
+        `/topics/${params.topicId}/materials/`
+      );
+
+      setMaterials(
+        (materialsResponse.data.data || []) as StudentMaterial[]
+      );
+
+    } catch (error) {
+
+      console.error("Error fetching learning materials:", error);
+      setMaterials([]);
+
+    } finally {
+
+      setMaterialsLoading(false);
+
+    }
+  };
+
   useEffect(() => {
 
     void Promise.resolve().then(fetchTopic);
     // Only check diagnostic status for students
     if (user?.role === "student") {
       void Promise.resolve().then(checkDiagnosticStatus);
+      void Promise.resolve().then(fetchLearningMaterials);
     }
 
   }, [params.topicId, user?.role]);
@@ -164,6 +211,13 @@ export default function TopicPage() {
       <p className="mt-4 text-gray-600">
         {topic.description || "No description"}
       </p>
+
+      {user?.role === "student" ? (
+        <StudentLearningMaterialsSection
+          materials={materials}
+          loading={materialsLoading}
+        />
+      ) : null}
 
       <div className="mt-10 rounded-xl border p-6 shadow-sm">
 
@@ -242,14 +296,6 @@ export default function TopicPage() {
         )}
 
       </div>
-
-    <div className="mt-10">
-
-    <h2 className="mb-6 text-3xl font-bold">
-        Materials
-    </h2>
-
-    </div>
 
     </div>
   );

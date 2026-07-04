@@ -525,6 +525,37 @@ def topic_materials(request, topic_id):
             topic=topic
         ).order_by("-uploaded_at")
 
+        # Students only receive ready-to-use materials and never see
+        # processing internals.
+        if request.user.role == "student":
+
+            materials = materials.filter(
+                processing_status=MaterialProcessingStatus.READY
+            )
+
+            serializer = MaterialSerializer(
+                materials,
+                many=True
+            )
+
+            student_data = [
+                {
+                    "id": item["id"],
+                    "title": item["title"],
+                    "file": item["file"],
+                    "uploaded_at": item["uploaded_at"],
+                    "uploaded_by_name": item["uploaded_by_name"],
+                }
+                for item in serializer.data
+            ]
+
+            return Response(
+                {
+                    "success": True,
+                    "data": student_data,
+                }
+            )
+
         serializer = MaterialSerializer(
             materials,
             many=True
